@@ -4,11 +4,11 @@
  Not set in stone, just general ideas.
 
 ### Managers
- BoardManager
- WindowManager
- SocketManager
+ - BoardManager
+ - WindowManager
+ - SocketManager
 
 ### Subclasses
- DataTransferClass: BoardManager -> DataTransferClass -> SocketManager
- GridCell: GridCell -> BoardManager
- Ship: Ship -> BoardManager
+ - DataTransferClass: BoardManager -> DataTransferClass -> SocketManager
+ - GridCell: GridCell -> BoardManager
+ - Ship: Ship -> BoardManager
