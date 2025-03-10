@@ -10,44 +10,41 @@ public final class DataPacket {
         
         public static final int HEADER_SIZE       = 5;
 
-        public static final byte HEAD_TYPE_PING   = 1;
-        public static final byte HEAD_TYPE_GAME   = 2;
-
         private final byte HEAD_MASK_FLAGS   = (byte)0b11110000;
         private final byte HEAD_MASK_TYPE    = (byte)0b00001110;
         private final byte HEAD_MASK_TURN    = (byte)0b00000001;
         private final byte HEAD_MASK_USER    = (byte)0b11111111;
         private final byte HEAD_MASK_LENGTH  = (byte)0b11111111;
-
+        
         private final int HEAD_INDEX_FLAGS  = 0;
         private final int HEAD_INDEX_TYPE   = 0;
         private final int HEAD_INDEX_TURN   = 0;
         private final int HEAD_INDEX_USER   = 1;
         private final int HEAD_INDEX_LENGTH = 3;
-
-
-
+        
+        
+        
         // ----- Data -----
         
         // Contains all header data after packing
         private byte[] mData;
-
-
-
+        
+        
+        
         // ----- Methods -----
-
+        
         public Header() {
             this.mData = new byte[HEADER_SIZE];
         }
-
-
-
+        
+        
+        
         // ----- Bit ----- Manipulators -----
-
+        
         private void bitManipulate(int byteNum, byte mask, byte newData) {
             this.mData[byteNum] |= mask & newData;
         }
-
+        
         public void addFlag(byte flag) {
             this.bitManipulate(HEAD_INDEX_FLAGS, HEAD_MASK_FLAGS, flag);
         }
@@ -59,7 +56,7 @@ public final class DataPacket {
         public void addTurn(byte turn) {
             this.bitManipulate(HEAD_INDEX_TURN, HEAD_MASK_TURN, turn);
         }
-
+        
         public void addUser(short user) {
             this.bitManipulate(HEAD_INDEX_USER, HEAD_MASK_USER, (byte)((user & 0xff00) >> 8));
             this.bitManipulate(HEAD_INDEX_USER + 1, HEAD_MASK_USER, (byte)(user & 0x00ff));
@@ -69,24 +66,27 @@ public final class DataPacket {
             this.bitManipulate(HEAD_INDEX_LENGTH, HEAD_MASK_LENGTH, (byte)((length & 0xff00) >> 8));
             this.bitManipulate(HEAD_INDEX_LENGTH + 1, HEAD_MASK_LENGTH, (byte)(length & 0x00ff));
         }
-
+        
         public int getType() {
             return ((this.mData[HEAD_INDEX_TYPE] & HEAD_MASK_TYPE) >> 1);
         }
-
+        
         public int getLength() {
             return ((this.mData[HEAD_INDEX_LENGTH] << 8) | this.mData[HEAD_INDEX_LENGTH + 1]);
         }
-
+        
         public byte[] getData() {
             return this.mData;
         }
     }
-
+    
     // ----- Constants -----
+    
+    public static final byte PACKET_TYPE_PING   = 1;
+    public static final byte PACKET_TYPE_GAME   = 2;
+    
 
-
-
+    
     // ----- Data -----
     
     // Data packet header
@@ -95,7 +95,7 @@ public final class DataPacket {
     // Body of packet
     private byte[] mBody;
 
-
+    
 
     // ----- Methods -----
     
@@ -114,7 +114,7 @@ public final class DataPacket {
     // Sets up data with game state data
     public void serializeData(Grid grid) {
         // Add length for header info
-        this.mHeader.addType(Header.HEAD_TYPE_GAME);
+        this.mHeader.addType(PACKET_TYPE_GAME);
         this.mHeader.addLength((short)(Grid.GRID_SIZE * Grid.GRID_SIZE));
         
         // Copy header into packet
@@ -133,7 +133,7 @@ public final class DataPacket {
     
     // Sets up packet with ping data
     public void serializeData() {
-        this.mHeader.addType(Header.HEAD_TYPE_PING);
+        this.mHeader.addType(PACKET_TYPE_PING);
         this.mHeader.addLength((short)0);
 
         // Empty body, but not null
@@ -145,4 +145,3 @@ public final class DataPacket {
         return this.mBody;
     }
 }
-

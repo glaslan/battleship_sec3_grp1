@@ -69,17 +69,19 @@ public class GameManager implements Runnable {
     // ----- Start ----- End -----
     
     private void startGame() {
+        System.out.println("Starting game on thread id=" + Thread.currentThread().threadId());
         // Setup game states
     }
     
     private void endGame() {
-        System.out.println("Ending game");
+        System.out.println("Ending game on thread id=" + Thread.currentThread().threadId());
+
         // Close connections and end game
         try {
             this.mClient1.close();
             this.mClient2.close();
         } catch (IOException e) {
-            System.err.println("Failed to close clients");
+            System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
         }
     }
 
@@ -92,10 +94,9 @@ public class GameManager implements Runnable {
     // ----- Read -----
 
     private void pingClients() {
-        System.out.println("Pinging");
         // If a client has disconnected, end game
         if (!ConnectionManager.ping(mClient1) || !ConnectionManager.ping(mClient2)) {
-            System.err.println("Failed to ping a client");
+            System.err.println("Failed to ping a client on thread=" + Thread.currentThread().threadId());
             this.mGameOver = true;
         }
     }

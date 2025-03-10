@@ -105,7 +105,7 @@ public final class ConnectionManager implements Runnable {
             }
         }
         catch (IOException e) {
-            System.err.println("Failed to get client output stream");
+            System.err.println("Failed to ping client");
             return false;
         }
         return true;
