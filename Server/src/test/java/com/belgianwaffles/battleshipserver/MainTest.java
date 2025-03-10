@@ -1,4 +1,4 @@
-package com.schtuffs.project;
+package com.belgianwaffles.battleshipserver;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
