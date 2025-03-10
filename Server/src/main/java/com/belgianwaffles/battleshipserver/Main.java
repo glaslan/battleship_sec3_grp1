@@ -20,7 +20,7 @@ public class Main {
 
         // Allows server to properly close with input
         Scanner input = new Scanner(System.in);
-        System.out.println("Type anything to end server");
+        System.out.println("\nType anything to end server");
         input.nextLine();
 
         System.out.println("Exiting");

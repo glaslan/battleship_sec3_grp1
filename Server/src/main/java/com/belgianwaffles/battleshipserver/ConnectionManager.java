@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public final class ConnectionManager implements Runnable {
 
@@ -93,6 +94,7 @@ public final class ConnectionManager implements Runnable {
         DataPacket packet = new DataPacket();
         packet.serializeData();
 
+        // Send ping
         try {
             var output = new DataOutputStream(client.getOutputStream());
             output.write(packet.getBuffer());
@@ -103,6 +105,10 @@ public final class ConnectionManager implements Runnable {
                 System.out.println("Client was disconnected");
                 return false;
             }
+        }
+        catch (SocketTimeoutException e) {
+            System.err.println("Failed to ping socket");
+            return false;
         }
         catch (IOException e) {
             System.err.println("Failed to ping client");
