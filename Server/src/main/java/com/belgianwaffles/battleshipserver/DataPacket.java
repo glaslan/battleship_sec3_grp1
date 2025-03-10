@@ -36,6 +36,11 @@ public final class DataPacket {
         public Header() {
             this.mData = new byte[HEADER_SIZE];
         }
+
+        public Header(byte[] bytes) {
+            this.mData = new byte[HEADER_SIZE];
+            System.arraycopy(bytes, 0, this.mData, 0, HEADER_SIZE);
+        }
         
         
         
@@ -103,6 +108,20 @@ public final class DataPacket {
         this.mHeader = new Header();
     }
 
+    public DataPacket(byte[] bytes) {
+        this.mHeader = new Header(bytes);
+        this.mBody = new byte[this.mHeader.getLength()];
+        System.arraycopy(bytes, Header.HEADER_SIZE, this.mBody, 0, this.mHeader.getLength());
+    }
+
+    public int getType() {
+        return this.mHeader.getType();
+    }
+    
+    public byte[] getBuffer() {
+        return this.mBody;
+    }
+
 
 
     // ----- Serialization -----
@@ -139,9 +158,5 @@ public final class DataPacket {
         // Empty body, but not null
         this.mBody = new byte[1];
         this.setByte(0, (byte)0);
-    }
-
-    public byte[] getBuffer() {
-        return this.mBody;
     }
 }
