@@ -7,7 +7,7 @@ public class GameManager implements Runnable {
     
     // ----- Constants -----
     
-    private static int SLEEP_TIME = 10000;
+    private static int SLEEP_TIME = 5000;
 
 
 
@@ -43,7 +43,7 @@ public class GameManager implements Runnable {
         
         // Create thread for pinging clients
         Runnable pingThread = () -> {
-            while (!sServerClosed) {
+            while (!this.mGameOver && !sServerClosed) {
                 try {
                     Thread.sleep(SLEEP_TIME);
                     GameManager.this.pingClients();
@@ -52,14 +52,24 @@ public class GameManager implements Runnable {
                 }
             }
         };
-        new Thread(pingThread).start();
+        Thread t = new Thread(pingThread);
+        t.setDaemon(true);
+        t.start();
 
         // Main loop
         while (!this.mGameOver && !sServerClosed) {
+            try {
+                // This is a load bearring sleep statement
+                // I do not know why, but removing this sleep causes the game to not end
+                // For the love of all that is holy, DO NOT DELETE THIS SLEEP UNLESS YOU ARE PREPARED TO SUFFER
+                Thread.sleep(0);
+            } catch (InterruptedException e) {
+            }
         }
         
         // Actions for game end
         this.endGame();
+        System.out.println("Closed thread id=" + Thread.currentThread().threadId());
     }
     
     
@@ -81,6 +91,9 @@ public class GameManager implements Runnable {
             this.mClient1.close();
             this.mClient2.close();
         } catch (IOException e) {
+            System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
+        }
+        catch (NullPointerException e) {
             System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
         }
     }

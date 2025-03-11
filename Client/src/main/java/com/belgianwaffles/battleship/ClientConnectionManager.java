@@ -5,6 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+import com.belgianwaffles.battleship.DataPacket.Header;
+
 public class ClientConnectionManager implements Runnable{
 
     public static final int DEFAULT_PORT    = 27000;
@@ -35,19 +37,32 @@ public class ClientConnectionManager implements Runnable{
 
             try {
                 var input = new DataInputStream(connectionSocket.getInputStream());
-                byte[] received =  input.readAllBytes();
-
-                DataPacket rec = new DataPacket(received);
-                if (input.read(received, 0, DataPacket.Header.HEADER_SIZE) == -1) {
+                byte[] head = new byte[Header.HEADER_SIZE];
+            
+                // Read header
+                if (input.read(head, 0, head.length) == -1) {
                     System.out.println("No connection");
+                    break;
                 }
-                System.out.println("Da ping: " + rec.getType());
+
+                // Create packet and check for ping
+                DataPacket rec = new DataPacket(head);
                 if (rec.getType() == DataPacket.PACKET_TYPE_PING) {
                     pingServer();
+                    byte[] clear = new byte[1000];
+                    input.read(clear, 0, clear.length);
+                    continue;
                 }
+                System.out.println("How");
                 
-
-            } catch (IOException e) {}
+                // Read body and tail
+                byte[] body = new byte[rec.getLength()];
+                if (input.read(head, 0, head.length) == -1) {
+                    continue;
+                }
+            } catch (IOException e) {
+                break;
+            }
             
         }
 

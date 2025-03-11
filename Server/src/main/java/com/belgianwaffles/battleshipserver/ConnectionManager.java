@@ -33,14 +33,16 @@ public final class ConnectionManager implements Runnable {
         this.mRunningServer = true;
     }
 
-    public void close() {
+    public boolean close() {
         // Closes server sockets and ends all games in progress
         this.mRunningServer = false;
         GameManager.endAllGames();
         try {
             this.mServer.close();
+            return true;
         } catch (IOException e) {
             System.err.println("Failed to close server");
+            return false;
         }
     }
     
@@ -73,13 +75,26 @@ public final class ConnectionManager implements Runnable {
 
             // Attempt to start game
             if (this.startGame(this.mClient1, this.mClient2)) {
-                this.mClient1 = null;
-                this.mClient2 = null;
+                // Failed to start game
+
+                // Check if client 2 disconnected
+                if (!this.checkConnection(this.mClient2)) {
+                    this.mClient2 = null;
+                }
+                // Check if client 1 disconnected
+                // Can move client 2 in always since both will be null anyway
+                if (!this.checkConnection(this.mClient1)) {
+                    this.mClient1 = this.mClient2;
+                }
             }
         }
     }
 
-    // Ensures a client is still connected
+    /**
+     * Ensures a client is still connected to the server
+     * @param client <code>Socket</code> to send ping to
+     * @return <code>boolean</code> <code>true</code> if connection is still live
+     */
     private boolean checkConnection(Socket client) {
         // If no client
         if (client == null) {
@@ -89,6 +104,11 @@ public final class ConnectionManager implements Runnable {
         return ping(client);
     }
     
+    /**
+     * Creates a ping packet and sends it to the clients.
+     * Waits for a ping packet to be sent back within DEFAULT_TIMEOUT
+     * @param client <code>Socket</code> to send ping to
+     */
     public static boolean ping(Socket client) {
         // Prepare ping packet
         DataPacket packet = new DataPacket();
@@ -114,16 +134,27 @@ public final class ConnectionManager implements Runnable {
             }
         }
         catch (SocketTimeoutException e) {
-            System.err.println("Failed to ping socket");
+            System.err.println("Failed to ping socket in time");
             return false;
         }
         catch (IOException e) {
             System.err.println("Failed to ping client");
             return false;
         }
+        catch (NullPointerException e) {
+            System.err.println("No client");
+            return false;
+        }
         return true;
     }
 
+    /**
+     * Attempts to start a game with the 2 given client <code>Socket</code> classes
+     * @param client1 <code>Socket</code> of the first client
+     * @param client2 <code>Socket</code> of the second client
+     * @return <code>boolean</code> returns <code>true</code> when a thread for a new game has been created. 
+     * Returns false if either of the clients have disconnected from the server
+     */
     private boolean startGame(Socket client1, Socket client2) {
         // Check state of client 1
         if (this.checkConnection(client1) && this.checkConnection(client2)) {

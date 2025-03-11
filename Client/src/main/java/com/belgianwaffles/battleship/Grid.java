@@ -34,6 +34,10 @@ public final class Grid {
             this.mCell = 0;
         }
 
+        public GridCell(byte val) {
+            this.mCell = val;
+        }
+
         private void bitManipulate(byte mask, boolean turnOn) {
             if (turnOn) {
                 this.mCell |= mask;
@@ -84,6 +88,15 @@ public final class Grid {
     
     public Grid() {
         this.mCells = new GridCell[GRID_SIZE][GRID_SIZE];
+    }
+    
+    public Grid(byte[] data) {
+        this.mCells = new GridCell[GRID_SIZE][GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j] = new GridCell(data[i * GRID_SIZE + j]);
+            }
+        }
     }
 
     // Copies cell data so it can be changed outside of class without affecting actual grid
