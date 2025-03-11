@@ -1,9 +1,8 @@
 package com.belgianwaffles.battleship;
 
-import java.util.Vector;
 import javax.swing.ImageIcon;
 
-public class Segment {
+public class Segment extends GameObject {
     
     private String assetPath;
     private ImageIcon img;
@@ -19,6 +18,14 @@ public class Segment {
         this.height = height;
     }
 
+    public Segment(ImageIcon img, Vector2 position, int width, int height) {
+        this.img = img;
+        this.position = position;
+        this.width = width;
+        this.height = height;
+    }
+
+    @Override
     public ImageIcon getImage() {
         return this.img;
     }
@@ -27,10 +34,12 @@ public class Segment {
      * Set the image of the segment.
      * @param img the new ImageIcon for the segment
      */
+    @Override
     public void setImage(ImageIcon img) {
         this.img = img;
     }
 
+    @Override
     public Vector2 getPosition() {
         return this.position;
     }
@@ -40,6 +49,7 @@ public class Segment {
      *
      * @return the width of the segment as an integer
      */
+    @Override
     public int getWidth() {
         return this.width;
     }
@@ -49,22 +59,14 @@ public class Segment {
      *
      * @return the height of the segment as an integer
      */
+    @Override
     public int getHeight() {
         return this.height;
     }
 
-    /**
-     * Show the segment on screen.
-     */
-    public void show() {
-        this.img.setVisible(true);
-    }
-    
-    /**
-     * Hide the segment on screen.
-     */
-    public void hide() {
-        this.img.setVisible(false);
+    @Override
+    public void setPosition(Vector2 pos) {
+        this.position = pos;
     }
 
 }
