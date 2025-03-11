@@ -40,16 +40,14 @@ public class ClientConnectionManager implements Runnable{
                 DataPacket rec = new DataPacket(received);
                 if (input.read(received, 0, DataPacket.Header.HEADER_SIZE) == -1) {
                     System.out.println("No connection");
-                    return;
                 }
-
+                System.out.println("Da ping: " + rec.getType());
                 if (rec.getType() == DataPacket.PACKET_TYPE_PING) {
                     pingServer();
                 }
+                
 
-            } catch (IOException e) {
-                return;
-            }
+            } catch (IOException e) {}
             
         }
 
