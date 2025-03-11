@@ -12,10 +12,14 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
-public class Window extends JFrame implements ActionListener {
+public class GameWindow extends JFrame implements ActionListener {
 
     private JButton b_Connect;
     private JButton b_Exit;
+
+    private boolean clientTurn;
+
+    private ClientConnectionManager connection;
 
 
     private ArrayList<WindowComponent> elements = new ArrayList<>();
@@ -62,7 +66,7 @@ public class Window extends JFrame implements ActionListener {
 
 
     
-    public Window() {
+    public GameWindow() {
 
         this.setLayout(null);
         this.setVisible(true);
@@ -71,14 +75,14 @@ public class Window extends JFrame implements ActionListener {
 
 
         // Buttons
-        AssetImage test = new AssetImage(new ImageIcon("ThisBeAnAsset.png"), 0.6, 0.15, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+        AssetImage test = new AssetImage(new ImageIcon("assets/ThisBeAnAsset.png"), 0.6, 0.15, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         imageInit(test);
 
         b_Connect = new JButton("Connect");
         buttonInit(b_Connect, 0.2, 0.7, 0.6, 0.15);
         b_Connect.setVisible(true);
 
-        b_Exit = new JButton("Exit");
+        b_Exit = new JButton(test);
         buttonInit(b_Exit, 0.2, 0.3, 0.6, 0.15);
         b_Exit.setVisible(true);
 
@@ -88,15 +92,22 @@ public class Window extends JFrame implements ActionListener {
         getContentPane().addComponentListener(new ComponentAdapter() {
         	public void componentResized(ComponentEvent e) {
 
+                // resize all images/assets
                 for (AssetImage img : loadedImages) {
                     img.resizeImage(getWidth(), getHeight());
                 }
+
+                // resize all screen components i.e. buttons, labels, text fields, etc.
                 for (WindowComponent comp : elements) {
                     comp.resize(getWidth(), getHeight());
                 }
             }
          });
 
+
+         clientTurn = false;
+
+         
 
         
     }
@@ -110,6 +121,24 @@ public class Window extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+
+        if (e.getSource() == b_Connect) {
+            connectToServer();
+        }   
+
+    }
+
+    private void startGame() {
+        clientTurn = false;
+    }
+
+    private void connectToServer() {
+
+        // Establish connection thread 
+        connection = new ClientConnectionManager(this);
+
+        Thread connectionThread = new Thread(connection);
+        connectionThread.start();
 
     }
     
