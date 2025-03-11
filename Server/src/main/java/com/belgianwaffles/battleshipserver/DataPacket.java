@@ -33,10 +33,33 @@ public final class DataPacket {
         
         // ----- Methods -----
         
+        /**
+         * Creates a blank header
+         */
         public Header() {
             this.mData = new byte[HEADER_SIZE];
         }
 
+        /**
+         * Creates header with a given type
+         * @param type type of header to prepare
+         */
+        public Header(int type) {
+            switch(type) {
+                case DataPacket.PACKET_TYPE_PING:
+                    this.addType(PACKET_TYPE_PING);
+                    this.addLength((short)0);
+                    break;
+                case DataPacket.PACKET_TYPE_GAME:
+                    this.addType(PACKET_TYPE_GAME);
+                    break;
+            }
+        }
+
+        /**
+         * Creates header from received <code>byte[]</code>
+         * @param bytes data received over socket
+         */
         public Header(byte[] bytes) {
             this.mData = new byte[HEADER_SIZE];
             System.arraycopy(bytes, 0, this.mData, 0, HEADER_SIZE);
@@ -104,10 +127,28 @@ public final class DataPacket {
 
     // ----- Methods -----
     
+    /**
+     * Creates an empty, untyped packet
+     * @param none idk, you didn't put anything in there so you get a packet of you-can-do-stuff-to-it-able
+     */
     public DataPacket() {
         this.mHeader = new Header();
+        this.mBody = new byte[1];
+    }
+    
+    /**
+     * Creates a packet with a header of specified type
+     * @param type type of header to initialize with
+     */
+    public DataPacket(int type) {
+        this.mHeader = new Header(type);
+        this.mBody = new byte[1];
     }
 
+    /**
+     * Creates a packet from a received <code>byte[]</code>
+     * @param bytes received buffer of bytes from socket
+     */
     public DataPacket(byte[] bytes) {
         this.mHeader = new Header(bytes);
         this.mBody = new byte[this.mHeader.getLength()];
@@ -130,7 +171,23 @@ public final class DataPacket {
         this.mBody[index] = data;
     }
 
-    // Sets up data with game state data
+    /**
+     *  Sets up packet with ping data
+     * @param none Creates a ping packet 
+     */
+    public void serializeData() {
+        this.mHeader.addType(PACKET_TYPE_PING);
+        this.mHeader.addLength((short)0);
+
+        // Empty body, but not null
+        this.mBody = new byte[1];
+        this.setByte(0, (byte)0);
+    }
+
+    /**
+     *  Sets up data with game state data
+     * @param grid Uses the given grid and adds its data to the packet
+     */
     public void serializeData(Grid grid) {
         // Add length for header info
         this.mHeader.addType(PACKET_TYPE_GAME);
@@ -148,15 +205,5 @@ public final class DataPacket {
                 this.setByte(index, cells[i][j].getCell());
             }
         }
-    }
-    
-    // Sets up packet with ping data
-    public void serializeData() {
-        this.mHeader.addType(PACKET_TYPE_PING);
-        this.mHeader.addLength((short)0);
-
-        // Empty body, but not null
-        this.mBody = new byte[1];
-        this.setByte(0, (byte)0);
     }
 }
