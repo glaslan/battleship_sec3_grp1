@@ -21,7 +21,7 @@ public final class ConnectionManager implements Runnable {
     private ServerSocket mServer;
     private Socket mClient1, mClient2;
     private boolean mRunningServer;
-
+    private static FileLogger logger;
 
 
     // ----- Methods -----
@@ -99,8 +99,15 @@ public final class ConnectionManager implements Runnable {
             var output = new DataOutputStream(client.getOutputStream());
             output.write(packet.getBuffer());
             var input = new DataInputStream(client.getInputStream());
+
+            // create log of sent message
+            logger.logMessage(new String(packet.getBuffer()));
+            
             byte[] received = new byte[DataPacket.Header.HEADER_SIZE];
             
+            // create log of received message
+            logger.logMessage(new String(received));
+
             if (input.read(received, 0, DataPacket.Header.HEADER_SIZE) == -1) {
                 System.out.println("Client was disconnected");
                 return false;
