@@ -119,9 +119,6 @@ public final class ConnectionManager implements Runnable {
             var output = new DataOutputStream(client.getOutputStream());
             output.write(packet.getBuffer());
             var input = new DataInputStream(client.getInputStream());
-
-            // create log of sent message
-            Log.log(Log.LOG_PING, packet.toString());
             
             // Read ping from client
             byte[] received = new byte[DataPacket.HEADER_SIZE];
@@ -132,9 +129,6 @@ public final class ConnectionManager implements Runnable {
 
             // Deserialize the packet
             packet.deserialize(received);
-
-            // Create log of received message
-            Log.log(Log.LOG_PING, packet.toString());
         }
         catch (SocketTimeoutException e) {
             System.err.println("Failed to ping socket in time");

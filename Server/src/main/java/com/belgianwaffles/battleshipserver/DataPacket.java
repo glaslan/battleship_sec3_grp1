@@ -148,7 +148,7 @@ public final class DataPacket {
         try {
             this.mBody[index] = data;
         } catch (IndexOutOfBoundsException e) {
-            Log.error(DataPacket.class, "setByte(int, byte)",  "Body out of bounds");
+            System.err.println("Body out of bounds");
         }
     }
 
