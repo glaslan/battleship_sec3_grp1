@@ -23,12 +23,16 @@ public class Main {
         }
 
         // Allows server to properly close with input
-        Scanner input = new Scanner(System.in);
-        System.out.println("\nType anything to end server");
-        input.nextLine();
+        try (Scanner input = new Scanner(System.in)) {
+            System.out.println("\nType anything to end server");
+            input.nextLine();
+            
+            System.out.println("Exiting");
+        }
 
-        System.out.println("Exiting");
-        input.close();
-        connection.close();
+        // Close connection socket
+        if (connection.close()) {
+            System.out.println("Successfully closed the server!");
+        }
     }
 }
