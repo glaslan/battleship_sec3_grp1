@@ -1,21 +1,24 @@
 package com.belgianwaffles.battleship;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
+import java.awt.*;
 import java.util.ArrayList;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.WindowConstants;
+import javax.swing.text.html.HTMLDocument;
 
 public class GameWindow extends JFrame implements ActionListener {
 
     private JButton b_Connect;
     private JButton b_Exit;
+
+    private JLabel l_title;
 
     private boolean clientTurn;
 
@@ -49,10 +52,45 @@ public class GameWindow extends JFrame implements ActionListener {
 
     }
 
+    private boolean clicked(WindowComponent element, Point p) {
+
+        // check if within x
+        if (p.getX() >= getWindowXPosition(element.getBoundX()) && 
+            p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
+            p.getY() >= getWindowYPosition(element.getBoundY()) && 
+            p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) 
+        {
+            System.out.println(getWindowXPosition(element.getBoundX()));
+            System.out.println(getWindowXPosition(element.getBoundX() + element.getWidth()));
+            System.out.println(getWindowYPosition(element.getBoundY()));
+            System.out.println(getWindowYPosition(element.getBoundY() + element.getHeight()));
+            return true;
+            
+        }   return false;
+    }
+
+    private int getWindowXPosition(double relative) {
+        return (int)(relative * getWidth());
+    }
+
+    private int getWindowYPosition(double relative) {
+        return (int)(relative * getHeight());
+    }
+
 
     // all images must use this function or else they will not be scaled when screen resized
     private void imageInit(AssetImage img) {
         loadedImages.add(img);
+    }
+
+    private WindowComponent getWindowComponent(JComponent element) {
+        for (WindowComponent e : elements) {
+            if (e.getComponent().equals(element)) {
+                return e;
+            }
+        }
+
+        return null;
     }
 
 
@@ -69,9 +107,11 @@ public class GameWindow extends JFrame implements ActionListener {
     public GameWindow() {
 
         this.setLayout(null);
+        this.setUndecorated(true);
         this.setVisible(true);
         this.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        
 
 
         // Buttons
@@ -85,6 +125,15 @@ public class GameWindow extends JFrame implements ActionListener {
         b_Exit = new JButton(test);
         buttonInit(b_Exit, 0.2, 0.3, 0.6, 0.15);
         b_Exit.setVisible(true);
+
+        // JLabels
+        l_title = new JLabel("Battleship");
+        componentInit(l_title, 0.3, 0.1, 0.4, 0.2);
+        l_title.setVisible(true);
+        l_title.setBorder(BorderFactory.createLineBorder(Color.black));
+        
+
+        
 
 
 
@@ -100,12 +149,31 @@ public class GameWindow extends JFrame implements ActionListener {
                 // resize all screen components i.e. buttons, labels, text fields, etc.
                 for (WindowComponent comp : elements) {
                     comp.resize(getWidth(), getHeight());
+                    System.out.println(comp.getBoundY() * getHeight());
+                    System.out.println(comp.getBoundX() * getWidth());
                 }
             }
          });
 
 
+         this.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                
+                System.out.println("Mouse clicked at: "+e.getPoint());
+
+                if (clicked(getWindowComponent(l_title), e.getPoint())) {
+                    System.out.println("Im a title");
+                }
+            }
+         });
+
+
+
+
          clientTurn = false;
+         this.setSize((int)Toolkit.getDefaultToolkit().getScreenSize().getWidth(), (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight());
 
          
 
