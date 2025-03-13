@@ -21,7 +21,7 @@ public final class ConnectionManager implements Runnable {
     private ServerSocket mServer;
     private Socket mClient1, mClient2;
     private boolean mRunningServer;
-    private static FileLogger logger;
+
 
 
     // ----- Methods -----
@@ -112,7 +112,7 @@ public final class ConnectionManager implements Runnable {
     public static boolean ping(Socket client) {
         // Prepare ping packet
         DataPacket packet = new DataPacket();
-        packet.serializeData();
+        packet.serialize();
 
         // Send ping
         try {
@@ -121,17 +121,20 @@ public final class ConnectionManager implements Runnable {
             var input = new DataInputStream(client.getInputStream());
 
             // create log of sent message
-            logger.logMessage(new String(packet.getBuffer()));
+            Log.log(Log.LOG_PING, packet.toString());
             
-            byte[] received = new byte[DataPacket.Header.HEADER_SIZE];
-            
-            // create log of received message
-            logger.logMessage(new String(received));
-
-            if (input.read(received, 0, DataPacket.Header.HEADER_SIZE) == -1) {
+            // Read ping from client
+            byte[] received = new byte[DataPacket.HEADER_SIZE];
+            if (input.read(received, 0, received.length) == -1) {
                 System.out.println("Client was disconnected");
                 return false;
             }
+
+            // Deserialize the packet
+            packet.deserialize(received);
+
+            // Create log of received message
+            Log.log(Log.LOG_PING, packet.toString());
         }
         catch (SocketTimeoutException e) {
             System.err.println("Failed to ping socket in time");
