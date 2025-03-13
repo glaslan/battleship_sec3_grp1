@@ -1,7 +1,9 @@
 package com.belgianwaffles.battleshipserver;
 
-import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 
 public class ConnectionTest {
@@ -20,6 +22,6 @@ public class ConnectionTest {
     @Test
     public void SocketTest() {
         DataPacket packet = new DataPacket();
-        packet.serializeData();
+        packet.serialize();
     }
 }
