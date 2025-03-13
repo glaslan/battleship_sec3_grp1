@@ -1,7 +1,7 @@
 package com.belgianwaffles.battleshipserver;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 public class PacketTest {
@@ -13,12 +13,12 @@ public class PacketTest {
     public void CreatePacketParamsNone() {
         // Arrange
         int expectedSize = 1;
-        int expectedType = DataPacket.PACKET_TYPE_PING;
+        int expectedType = Packet.PACKET_TYPE_PING;
         int expectedData = 0;
-        int expectedLength = DataPacket.HEADER_SIZE + 1 + DataPacket.PACKET_TAIL_SIZE;
+        int expectedLength = Packet.HEADER_SIZE + 1 + Packet.PACKET_TAIL_SIZE;
         
         // Act
-        DataPacket packet = new DataPacket();
+        Packet packet = new Packet();
         packet.serialize();
 
         // Gather
@@ -26,7 +26,7 @@ public class PacketTest {
 
         int actualSize = packet.getLength();
         int actualType = packet.getType();
-        int actualData = bytes[DataPacket.HEADER_SIZE];
+        int actualData = bytes[Packet.HEADER_SIZE];
         int actualLength = bytes.length;
 
         // Assert
@@ -41,16 +41,16 @@ public class PacketTest {
     @Test
     public void PacketDeserialize() {
         // Arrange
-        DataPacket ping = new DataPacket();
+        Packet ping = new Packet();
         ping.serialize();
         
         int expectedSize = 1;
-        int expectedType = DataPacket.PACKET_TYPE_PING;
+        int expectedType = Packet.PACKET_TYPE_PING;
         int expectedData = 0;
-        int expectedLength = DataPacket.HEADER_SIZE + 1 + DataPacket.PACKET_TAIL_SIZE;
+        int expectedLength = Packet.HEADER_SIZE + 1 + Packet.PACKET_TAIL_SIZE;
         
         // Act
-        DataPacket packet = new DataPacket();
+        Packet packet = new Packet();
         packet.deserialize(ping.getBuffer());
     
         // Gather
@@ -58,7 +58,7 @@ public class PacketTest {
     
         int actualSize = packet.getLength();
         int actualType = packet.getType();
-        int actualData = bytes[DataPacket.HEADER_SIZE];
+        int actualData = bytes[Packet.HEADER_SIZE];
         int actualLength = bytes.length;
     
         // Assert
@@ -66,5 +66,24 @@ public class PacketTest {
         assertEquals(expectedType, actualType);
         assertEquals(expectedData, actualData);
         assertEquals(expectedLength, actualLength);
+    }
+    /**
+     * Adds all flags to a packet and checks they are saved properly
+     */
+    @Test
+    public void PacketAllFlags() {
+        // Arrange
+        Packet packet = new Packet();
+        int expectedUser = 0b0000111010100100;
+
+        // Act
+        packet.addFlag(Packet.PACKET_FLAG_NONE);
+        packet.addTurn(Packet.PACKET_TURN_PONE);
+        packet.addUser((short)expectedUser);
+        packet.serialize();
+        
+        // Assert
+        assertTrue(packet.hasFlag(Packet.PACKET_FLAG_NONE));
+        assertEquals(expectedUser, packet.getUser());
     }
 }

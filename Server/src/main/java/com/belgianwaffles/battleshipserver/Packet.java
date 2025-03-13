@@ -1,6 +1,6 @@
 package com.belgianwaffles.battleshipserver;
 
-public final class DataPacket {
+public final class Packet {
 
     // ----- Header -----
 
@@ -27,7 +27,7 @@ public final class DataPacket {
         // ----- Data -----
         
         // Contains all header data after packing
-        private byte[] mData;
+        private final byte[] mData;
         
         
         
@@ -52,42 +52,124 @@ public final class DataPacket {
             this.mData[byteNum] |= mask & newData;
         }
         
+        /**
+         * Adds specified flag to packet header
+         * @param flag the flag to add
+         */
         public void addFlag(byte flag) {
             this.bitManipulate(HEAD_INDEX_FLAGS, HEAD_MASK_FLAGS, flag);
         }
         
+        /**
+         * Type of packet being created
+         * @param type use PACKET_TYPE_####
+         */
         public void addType(byte type) {
             this.bitManipulate(HEAD_INDEX_TYPE, HEAD_MASK_TYPE, (byte)(type << 1));
         }
         
+        /**
+         * Sets the current players turn
+         * @param turn use PACKET_TURN_P(ONE/TWO)
+         */
         public void addTurn(byte turn) {
             this.bitManipulate(HEAD_INDEX_TURN, HEAD_MASK_TURN, turn);
         }
         
+        /**
+         * Adds a users id to the packet
+         * @param user userId
+         */
         public void addUser(short user) {
             this.bitManipulate(HEAD_INDEX_USER, HEAD_MASK_USER, (byte)((user & 0xff00) >> 8));
             this.bitManipulate(HEAD_INDEX_USER + 1, HEAD_MASK_USER, (byte)(user & 0x00ff));
         }
         
+        /**
+         * Adds length to the packet
+         * @param length length of the packet body
+         */
         public void addLength(short length) {
             this.bitManipulate(HEAD_INDEX_LENGTH, HEAD_MASK_LENGTH, (byte)((length & 0xff00) >> 8));
             this.bitManipulate(HEAD_INDEX_LENGTH + 1, HEAD_MASK_LENGTH, (byte)(length & 0x00ff));
         }
+
+
+
+        // ----- Getters -----
+
+        /**
+         * Checks if packet has a specified flag
+         * @param flag
+         * @return true if packet has flag
+         */
+        public boolean hasFlag(byte flag) {
+            return (this.mData[HEAD_INDEX_FLAGS] & flag) == flag;
+        }
         
+        /**
+         * Gets the packet type
+         * @return the type of packet. Check with PACKET_TYPE_####
+         */
         public int getType() {
             return ((this.mData[HEAD_INDEX_TYPE] & HEAD_MASK_TYPE) >> 1);
         }
         
-        public int getLength() {
-            return ((this.mData[HEAD_INDEX_LENGTH] << 8) | this.mData[HEAD_INDEX_LENGTH + 1]);
+        /**
+         * Gets the current players turn type
+         * @return which players turn it is. Check with PACKET_TURN_P(ONE/TWO)
+         */
+        public int getTurn() {
+            return (this.mData[HEAD_INDEX_TURN] & HEAD_MASK_TURN);
         }
         
+        /**
+         * Gets the userId from the packet
+         * @return user specific id
+         */
+        public int getUser() {
+            // Get bits to prevent negative shenanigans
+            int bit1 = this.mData[HEAD_INDEX_USER] & 0b10000000;
+            int bit2 = this.mData[HEAD_INDEX_USER + 1] & 0b10000000;
+
+            // Get rest of byte
+            int byte1 = ((int)(this.mData[HEAD_INDEX_USER] & 0b01111111) << 8) | bit1;
+            int byte2 = ((int)(this.mData[HEAD_INDEX_USER + 1] & 0b01111111)) | bit2;
+            
+            return byte1 | byte2;
+        }
+
+        /**
+         * Gets the length of the packet body
+         * @return <code>int</code> length of packet body
+         */
+        public int getLength() {
+            // Get bits to prevent negative shenanigans
+            int bit1 = this.mData[HEAD_INDEX_LENGTH] & 0b10000000;
+            int bit2 = this.mData[HEAD_INDEX_LENGTH + 1] & 0b10000000;
+
+            // Get rest of byte
+            int byte1 = ((int)(this.mData[HEAD_INDEX_LENGTH] & 0b01111111) << 8) | bit1;
+            int byte2 = ((int)(this.mData[HEAD_INDEX_LENGTH + 1] & 0b01111111)) | bit2;
+
+            return byte1 | byte2;
+        }
+        
+        /**
+         * Gets the header data
+         * @return <code>byte[]</code> with header data
+         */
         public byte[] getData() {
             return this.mData;
         }
     }
 
     // ----- Constants -----
+
+    public static final byte PACKET_FLAG_NONE   = 0;
+
+    public static final byte PACKET_TURN_PONE   = 0;
+    public static final byte PACKET_TURN_PTWO   = 1;
     
     public static final byte PACKET_TYPE_NONE   = 0;
     public static final byte PACKET_TYPE_PING   = 1;
@@ -99,13 +181,13 @@ public final class DataPacket {
     // ----- Data -----
     
     // Data packet header
-    private Header mHeader;
+    private final Header mHeader;
     
     // Body of packet
     private byte[] mBody;
 
     // Tail (newline)
-    private byte[] mTail;
+    private final byte[] mTail;
 
     // Packet whole
     private byte[] mData;
@@ -120,7 +202,7 @@ public final class DataPacket {
      * Creates an empty data packet
      * @param None
      */
-    public DataPacket() {
+    public Packet() {
         this.mHeader = new Header();
         this.mBody = new byte[1];
         this.mTail = new byte[]{'\n'};
@@ -128,7 +210,7 @@ public final class DataPacket {
 
 
 
-    // ----- Setters -----
+    // ----- Packing -----
 
     /**
      * Requires body to be initialized to 
@@ -213,22 +295,75 @@ public final class DataPacket {
 
 
 
-    // ----- Getters -----
+    // ----- Setters -----
 
     /**
-     * Gets the length of the body for the packet
-     * @return packet body length
+     * Adds specified flag to packet header
+     * @param flag the flag to add
      */
-    public int getLength() {
-        return this.mHeader.getLength();
+    public void addFlag(byte flag) {
+        this.mHeader.addFlag(flag);
     }
     
     /**
-     * Gets the type of data packet
-     * @return packet type
+     * Sets the current players turn
+     * @param turn use PACKET_TURN_P(ONE/TWO)
+     */
+    public void addTurn(byte turn) {
+        this.mHeader.addTurn(turn);
+    }
+    
+    /**
+     * Adds a users id to the packet
+     * @param user userId
+     */
+    public void addUser(short user) {
+        this.mHeader.addUser(user);
+    }
+
+
+
+    // ----- Getters -----
+
+    /**
+     * Checks if packet has a specified flag
+     * @param flag
+     * @return true if packet has flag
+     */
+    public boolean hasFlag(byte flag) {
+        return this.mHeader.hasFlag(flag);
+    }
+    
+    /**
+     * Gets the packet type
+     * @return the type of packet. Check with PACKET_TYPE_####
      */
     public int getType() {
         return this.mHeader.getType();
+    }
+    
+    /**
+     * Gets the current players turn type
+     * @return which players turn it is. Check with PACKET_TURN_P(ONE/TWO)
+     */
+    public int getTurn() {
+        return this.mHeader.getTurn();
+    }
+    
+    /**
+     * Gets the userId from the packet
+     * @return user specific id
+     */
+    public int getUser() {
+        return this.mHeader.getUser();
+    }
+
+    /**
+     * Gets the length of the packet body
+     * @return <code>int</code> length of packet body
+     */
+    public int getLength() {
+        return this.mHeader.getLength();
     }
     
     /**
