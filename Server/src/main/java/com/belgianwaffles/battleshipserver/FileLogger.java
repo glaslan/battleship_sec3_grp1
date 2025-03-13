@@ -42,7 +42,7 @@ public class FileLogger {
             pingLog.setFormatter(formatter);
             errorLog.setFormatter(formatter);
             // not sure if this is needed?
-            // logger.setUseParentHandlers(false);
+            logger.setUseParentHandlers(false);
 
         } catch (IOException | SecurityException ex) {
             System.out.println("Error creating file logger.");

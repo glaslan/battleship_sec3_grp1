@@ -22,6 +22,7 @@ public class Main {
             connectThread.setDaemon(true);
             connectThread.start();
         } catch (IOException e) {
+            FileLogger.logError(Main.class, "main(String[])", "Could not create server socket");
             System.err.println("Could not create server socket");
             return;
         }

@@ -48,6 +48,8 @@ public class GameManager implements Runnable {
                     Thread.sleep(SLEEP_TIME);
                     GameManager.this.pingClients();
                 } catch (InterruptedException e) {
+                    FileLogger.logError(GameManager.class, "run()", 
+            "Thread interrupted");
                     System.err.println("Thread interrupted");
                 }
             }
@@ -91,9 +93,13 @@ public class GameManager implements Runnable {
             this.mClient1.close();
             this.mClient2.close();
         } catch (IOException e) {
+            FileLogger.logError(GameManager.class, "endGame()", 
+            "Failed to close clients on thread id=" + Thread.currentThread().threadId());
             System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
         }
         catch (NullPointerException e) {
+            FileLogger.logError(GameManager.class, "endGame()", 
+            "Failed to close clients on thread id=" + Thread.currentThread().threadId());
             System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
         }
     }
@@ -109,6 +115,8 @@ public class GameManager implements Runnable {
     private void pingClients() {
         // If a client has disconnected, end game
         if (!ConnectionManager.ping(mClient1) || !ConnectionManager.ping(mClient2)) {
+            FileLogger.logError(GameManager.class, "pingClients()", 
+            "Failed to ping a client on thread=" + Thread.currentThread().threadId());
             System.err.println("Failed to ping a client on thread=" + Thread.currentThread().threadId());
             this.mGameOver = true;
         }
