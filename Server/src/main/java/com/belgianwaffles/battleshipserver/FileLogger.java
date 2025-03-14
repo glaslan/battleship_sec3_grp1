@@ -26,8 +26,11 @@ public class FileLogger {
     private static FileHandler gameLog = null;
     private static FileHandler errorLog = null;
 
+
+    // Methods
+
     /**
-     * Initializes the logger with all needed paths, settings and formatting
+     * Initializes the logger with all needed file paths, settings and formatting
      */
     public static void initLogger() {
 
@@ -41,7 +44,8 @@ public class FileLogger {
             gameLog.setFormatter(formatter);
             pingLog.setFormatter(formatter);
             errorLog.setFormatter(formatter);
-            // not sure if this is needed?
+            // this prevents logger from printing to stdout
+            // seeing every ping in stdout would get quite annoying
             logger.setUseParentHandlers(false);
 
         } catch (IOException | SecurityException ex) {
@@ -49,6 +53,8 @@ public class FileLogger {
         }
         
     }
+
+    // Logging methods
 
     /**
      * Logs a message being transmitted or received to the game log
