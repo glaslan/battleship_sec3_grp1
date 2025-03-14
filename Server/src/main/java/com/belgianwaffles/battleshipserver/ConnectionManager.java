@@ -23,7 +23,6 @@ public final class ConnectionManager implements Runnable {
     private boolean mRunningServer;
 
 
-
     // ----- Methods -----
 
     public ConnectionManager(int port) throws IOException {
@@ -41,6 +40,7 @@ public final class ConnectionManager implements Runnable {
             this.mServer.close();
             return true;
         } catch (IOException e) {
+            FileLogger.logError(ConnectionManager.class, "close()", "Failed to close server");
             System.err.println("Failed to close server");
             return false;
         }
@@ -70,6 +70,8 @@ public final class ConnectionManager implements Runnable {
                 }
             }
             catch (IOException e) {
+                FileLogger.logError(ConnectionManager.class, "run()", 
+                "Something went wrong when connecting clients");
                 System.err.println("Something went wrong when connecting clients");
             }
 
@@ -118,6 +120,10 @@ public final class ConnectionManager implements Runnable {
         try {
             var output = new DataOutputStream(client.getOutputStream());
             output.write(packet.getBuffer());
+
+            // create log of sent ping
+            FileLogger.logPing(new String(packet.getBuffer()));
+
             var input = new DataInputStream(client.getInputStream());
             
             // Read ping from client
@@ -126,19 +132,27 @@ public final class ConnectionManager implements Runnable {
                 System.out.println("Client was disconnected");
                 return false;
             }
+            // create log of received ping
+            FileLogger.logPing(new String(received));
 
             // Deserialize the packet
             packet.deserialize(received);
         }
         catch (SocketTimeoutException e) {
+            FileLogger.logError(ConnectionManager.class, "ping(Socket)",
+             "Failed to ping socket in time");
             System.err.println("Failed to ping socket in time");
             return false;
         }
         catch (IOException e) {
+            FileLogger.logError(ConnectionManager.class, "ping(Socket)",
+             "Failed to ping client");
             System.err.println("Failed to ping client");
             return false;
         }
         catch (NullPointerException e) {
+            FileLogger.logError(ConnectionManager.class, "ping(Socket)",
+             "No client");
             System.err.println("No client");
             return false;
         }

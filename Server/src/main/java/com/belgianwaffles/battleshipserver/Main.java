@@ -6,10 +6,14 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
+        
         // Critical line of code
         // Holds the whole program together
         System.out.println("Heyo!");
-        
+
+        // initialize logger
+        FileLogger.initLogger();
+
         // Create server and check connections on separate thread
         ConnectionManager connection;
         try {
@@ -18,6 +22,7 @@ public class Main {
             connectThread.setDaemon(true);
             connectThread.start();
         } catch (IOException e) {
+            FileLogger.logError(Main.class, "main(String[])", "Could not create server socket");
             System.err.println("Could not create server socket");
             return;
         }

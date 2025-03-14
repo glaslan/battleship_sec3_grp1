@@ -230,6 +230,7 @@ public final class Packet {
         try {
             this.mBody[index] = data;
         } catch (IndexOutOfBoundsException e) {
+            FileLogger.logError(Packet.class, "setByte(int, byte)",  "Body out of bounds");
             System.err.println("Body out of bounds");
         }
     }
