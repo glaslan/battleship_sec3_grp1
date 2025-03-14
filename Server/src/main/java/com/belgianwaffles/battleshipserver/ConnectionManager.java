@@ -113,7 +113,7 @@ public final class ConnectionManager implements Runnable {
      */
     public static boolean ping(Socket client) {
         // Prepare ping packet
-        DataPacket packet = new DataPacket();
+        Packet packet = new Packet();
         packet.serialize();
 
         // Send ping
@@ -126,14 +126,17 @@ public final class ConnectionManager implements Runnable {
 
             var input = new DataInputStream(client.getInputStream());
             
-            byte[] received = new byte[DataPacket.HEADER_SIZE];
-
-            if (input.read(received, 0, DataPacket.HEADER_SIZE) == -1) {
+            // Read ping from client
+            byte[] received = new byte[Packet.HEADER_SIZE];
+            if (input.read(received, 0, received.length) == -1) {
                 System.out.println("Client was disconnected");
                 return false;
             }
             // create log of received ping
             FileLogger.logPing(new String(received));
+
+            // Deserialize the packet
+            packet.deserialize(received);
         }
         catch (SocketTimeoutException e) {
             FileLogger.logError(ConnectionManager.class, "ping(Socket)",
