@@ -122,7 +122,7 @@ public final class ConnectionManager implements Runnable {
             output.write(packet.getBuffer());
 
             // create log of sent ping
-            FileLogger.logPing(new String(packet.getBuffer()));
+            FileLogger.logPing(packet.toString());
 
             var input = new DataInputStream(client.getInputStream());
             
@@ -131,12 +131,12 @@ public final class ConnectionManager implements Runnable {
             if (input.read(received, 0, received.length) == -1) {
                 System.out.println("Client was disconnected");
                 return false;
-            }
-            // create log of received ping
-            FileLogger.logPing(new String(received));
+            }            
 
             // Deserialize the packet
             packet.deserialize(received);
+            // create log of received ping
+            FileLogger.logPing(packet.toString());
         }
         catch (SocketTimeoutException e) {
             FileLogger.logError(ConnectionManager.class, "ping(Socket)",

@@ -162,6 +162,18 @@ public final class Packet {
         public byte[] getData() {
             return this.mData;
         }
+
+        @Override
+        public String toString() {
+            String str = "Header Data\n";
+            str += "length: " + this.getLength() + "\n";
+            str += "turn: " + this.getTurn() + "\n";
+            str += "type: " + this.getType() + "\n";
+            str += "user: " + this.getUser() + "\n";
+            return str;
+        }
+
+        
     }
 
     // ----- Constants -----
@@ -405,5 +417,24 @@ public final class Packet {
         }
         
         return new Grid(this.mBody);
+    }
+
+
+    @Override
+    public String toString() {
+        String str = "";
+
+        // DELETE THIS ONCE TOSTRING IS PROPERLY IMPLEMENTED
+        // may or may not be good? havent tested yet but it cant hurt to have
+        String testStr = "ping got pinged";
+        if (testStr.isEmpty()) {
+        str += mHeader.toString();
+        str += "Packet Data\n";
+        str += "Grid: " + getGrid().toString() + "\n";
+        // ???? str += "buffer:\n";
+        
+        }
+        // CHANGE THIS TO STR ONCE TOSTRING IS TESTED
+        return testStr;
     }
 }

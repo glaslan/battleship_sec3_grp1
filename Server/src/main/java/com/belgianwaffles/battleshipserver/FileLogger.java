@@ -36,7 +36,8 @@ public class FileLogger {
 
         try {
             // set false to get rid of append
-            pingLog = new FileHandler(LOG_PATH+LOG_PING, true);
+            // setting pings to false since theres so many of them
+            pingLog = new FileHandler(LOG_PATH+LOG_PING, false);
             gameLog = new FileHandler(LOG_PATH+LOG_GAME, true);
             errorLog = new FileHandler(LOG_PATH+LOG_ERROR, true);
             

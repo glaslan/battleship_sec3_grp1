@@ -166,6 +166,20 @@ public final class Grid {
         public boolean hasShotP2() {
             return this.getBit(MASK_SHOT_2);
         }
+        
+        @Override
+        public String toString() {
+            String str = "";
+            str += "hasP1Ship: " + hasShipP1() + "\n";
+            str += "hasP2Ship: " + hasShipP2() + "\n";
+            str += "hasP1Shot: " + hasShotP1() + "\n";
+            str += "hasP2Shot: " + hasShotP2() + "\n";
+            str += "hasP1Shark: " + hasSharkP1() + "\n";
+            str += "hasP2Shark: " + hasSharkP2() + "\n";
+
+            return str;
+        }
+        
     }
 
     // ----- Constants -----
@@ -239,4 +253,16 @@ public final class Grid {
     public GridCell[][] getCells() {
         return this.copyCells();
     }
+    
+    @Override
+    public String toString() {
+        String str = "";
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                str += "grid cell (" + i + ", " + j + "): " + this.mCells[i][j].toString();
+            }
+        }
+    
+        return str;
+    };
 }
