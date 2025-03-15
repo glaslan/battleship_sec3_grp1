@@ -1,7 +1,14 @@
 package com.belgianwaffles.battleship;
 
-import java.awt.event.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -11,13 +18,11 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.WindowConstants;
-import javax.swing.text.html.HTMLDocument;
 
 public class GameWindow extends JFrame implements ActionListener {
 
-    private JButton b_Connect;
+    private JLabel b_Connect;
     private JButton b_Exit;
-
     private JLabel l_title;
 
     private boolean clientTurn;
@@ -60,10 +65,6 @@ public class GameWindow extends JFrame implements ActionListener {
             p.getY() >= getWindowYPosition(element.getBoundY()) && 
             p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) 
         {
-            System.out.println(getWindowXPosition(element.getBoundX()));
-            System.out.println(getWindowXPosition(element.getBoundX() + element.getWidth()));
-            System.out.println(getWindowYPosition(element.getBoundY()));
-            System.out.println(getWindowYPosition(element.getBoundY() + element.getHeight()));
             return true;
             
         }   return false;
@@ -118,9 +119,7 @@ public class GameWindow extends JFrame implements ActionListener {
         AssetImage test = new AssetImage(new ImageIcon("assets/ThisBeAnAsset.png"), 0.6, 0.15, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         imageInit(test);
 
-        b_Connect = new JButton("Connect");
-        buttonInit(b_Connect, 0.2, 0.7, 0.6, 0.15);
-        b_Connect.setVisible(true);
+        
 
         b_Exit = new JButton(test);
         buttonInit(b_Exit, 0.2, 0.3, 0.6, 0.15);
@@ -131,10 +130,13 @@ public class GameWindow extends JFrame implements ActionListener {
         componentInit(l_title, 0.3, 0.1, 0.4, 0.2);
         l_title.setVisible(true);
         l_title.setBorder(BorderFactory.createLineBorder(Color.black));
-        
 
-        
-
+        // Clickables
+        b_Connect = new JLabel("Connect");
+        componentInit(b_Connect, 0.2, 0.7, 0.6, 0.15);
+        b_Connect.setBorder(BorderFactory.createLineBorder(Color.black));
+        b_Connect.setBackground(Color.BLUE);
+        b_Connect.setVisible(true);
 
 
 
