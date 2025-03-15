@@ -1,7 +1,11 @@
 package com.belgianwaffles.battleshipserver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import org.junit.jupiter.api.Test;
 
 public class PacketTest {
@@ -85,5 +89,51 @@ public class PacketTest {
         // Assert
         assertTrue(packet.hasFlag(Packet.PACKET_FLAG_NONE));
         assertEquals(expectedUser, packet.getUser());
+    }
+    /**
+     * Pack a grid into packet, then get grid back
+     */
+    @Test
+    public void PacketGridInOut() {
+        // Arrange
+        Grid grid = new Grid();
+        var cells = grid.getCells();
+        for (int i = 0; i < Grid.GRID_SIZE * Grid.GRID_SIZE; i++) {
+            cells[i / Grid.GRID_SIZE][i % Grid.GRID_SIZE] = grid.new GridCell((byte)i);
+        }
+        grid = new Grid(cells);
+        
+        // Act
+        Packet packet = new Packet();
+        packet.serialize(grid);
+        Packet recv = new Packet();
+        recv.deserialize(packet.getBuffer());
+        var packetedGrid = recv.getGrid();
+        
+        // Assert
+        var packetedCells = packetedGrid.getCells();
+        for (int i = 0; i < Grid.GRID_SIZE * Grid.GRID_SIZE; i++) {
+            assertEquals(i, packetedCells[i / Grid.GRID_SIZE][i % Grid.GRID_SIZE].getCell());
+        }
+    }
+    /**
+     * Test that a non grid packet gets thrown
+     */
+    @Test
+    public void PacketThrowsIllegalState() {
+        // Arrange
+        // Expected is an IllegalStateException throw
+        
+        // Act
+        Packet packet = new Packet();
+        packet.serialize();
+        
+        // Assert
+        try {
+            packet.getGrid();
+            fail("Test did not throw");
+        } catch (IllegalStateException e) {
+            assertTrue(true);
+        }
     }
 }

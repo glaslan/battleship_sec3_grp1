@@ -173,7 +173,7 @@ public final class Packet {
     
     public static final byte PACKET_TYPE_NONE   = 0;
     public static final byte PACKET_TYPE_PING   = 1;
-    public static final byte PACKET_TYPE_GAME   = 2;
+    public static final byte PACKET_TYPE_GRID   = 2;
     public static final int  PACKET_TAIL_SIZE   = 1;
     
 
@@ -239,14 +239,14 @@ public final class Packet {
      * Adds body into the packet
      */
     private void setBody() {
-        System.arraycopy(this.mBody, 0, this.mData, this.mHeader.getLength(), this.mTail.length);
+        System.arraycopy(this.mBody, 0, this.mData, HEADER_SIZE, this.getLength());
     }
 
     /**
      * Adds the tail onto the end of the packet
      */
     private void setTail() {
-        System.arraycopy(this.mTail, 0, this.mData, this.mHeader.getLength(), this.mTail.length);
+        System.arraycopy(this.mTail, 0, this.mData, this.mHeader.getLength() + HEADER_SIZE, this.mTail.length);
     }
 
     /**
@@ -279,6 +279,25 @@ public final class Packet {
     }
 
     /**
+     * Serializes a grid packet for game information
+     * @param None
+     */
+    public void serialize(Grid grid) {
+        // Setup header
+        this.mHeader.addType(PACKET_TYPE_GRID);
+        
+        // Setup body with gridcell information
+        this.mBody = new byte[Grid.GRID_SIZE * Grid.GRID_SIZE];
+        var cells = grid.getCells();
+        for (int i = 0; i < this.mBody.length; i++) {
+            this.setByte(i, cells[i / Grid.GRID_SIZE][i % Grid.GRID_SIZE].getCell());
+        }
+        
+        // Pack data to packet
+        this.pack();
+    }
+
+    /**
      * Takes an array of bytes from socket
      * @param <code>byte[]</code> array of bytes from socket
      */
@@ -287,7 +306,7 @@ public final class Packet {
         this.mHeader.copy(bytes);
 
         // Get body setup
-        this.mBody = new byte[this.mHeader.getLength()];
+        this.mBody = new byte[this.getLength()];
         System.arraycopy(bytes, HEADER_SIZE, this.mBody, 0, this.mBody.length);
 
         // Pack back into data
@@ -373,5 +392,18 @@ public final class Packet {
      */
     public byte[] getBuffer() {
         return this.mData;
+    }
+
+    /**
+     * Gets a grid object from a packet
+     * @return Grid from packet body
+     * @throws IllegalStateException if not of type PACKET_TYPE_GRID
+     */
+    public Grid getGrid() throws IllegalStateException {
+        if ((byte)this.getType() != PACKET_TYPE_GRID) {
+            throw new IllegalStateException();
+        }
+        
+        return new Grid(this.mBody);
     }
 }

@@ -215,7 +215,7 @@ public final class Grid {
         this.mCells = new GridCell[GRID_SIZE][GRID_SIZE];
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
-                this.mCells[i][j] = new GridCell(cells[i][j]);
+                this.mCells[i][j] = new GridCell(cells[i][j].getCell());
             }
         }
     }
