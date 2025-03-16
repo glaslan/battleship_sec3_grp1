@@ -165,15 +165,30 @@ public final class Packet {
 
         @Override
         public String toString() {
-            String str = "Header Data\n";
-            str += "length: " + this.getLength() + "\n";
-            str += "turn: " + this.getTurn() + "\n";
-            str += "type: " + this.getType() + "\n";
-            str += "user: " + this.getUser() + "\n";
+            // Packet type
+            String str = "Packet type: ";
+            switch (this.getType()) {
+            case PACKET_TYPE_PING:
+                str += "Ping";
+                break;
+            case PACKET_TYPE_GRID:
+                str += "Grid";
+                break;
+            }
+
+            // Length
+            str += ", length: " + this.getLength();
+
+            // Flags
+            str += ", flags: " + (int)(this.mData[HEAD_INDEX_FLAGS] & HEAD_MASK_FLAGS);
+
+            // User id
+            str += ", userId: " + this.getUser();
+
+            // Newline before return
+            str += "\n";
             return str;
         }
-
-        
     }
 
     // ----- Constants -----
@@ -422,19 +437,24 @@ public final class Packet {
 
     @Override
     public String toString() {
-        String str = "";
-
-        // DELETE THIS ONCE TOSTRING IS PROPERLY IMPLEMENTED
-        // may or may not be good? havent tested yet but it cant hurt to have
-        String testStr = "ping got pinged";
-        if (testStr.isEmpty()) {
-        str += mHeader.toString();
-        str += "Packet Data\n";
-        str += "Grid: " + getGrid().toString() + "\n";
-        // ???? str += "buffer:\n";
-        
+        String str = this.mHeader.toString();
+        switch (this.getType()) {
+        case PACKET_TYPE_PING:
+            str += this.pingString();
+            break;
+        case PACKET_TYPE_GRID:
+            str += this.gridString();
+            break;
         }
-        // CHANGE THIS TO STR ONCE TOSTRING IS TESTED
-        return testStr;
+        return str;
+    }
+
+    private String pingString() {
+        // Nothing todo
+        return "";
+    }
+
+    private String gridString() {
+        return this.getGrid().toString();
     }
 }

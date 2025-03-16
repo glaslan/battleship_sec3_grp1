@@ -170,12 +170,17 @@ public final class Grid {
         @Override
         public String toString() {
             String str = "";
-            str += "hasP1Ship: " + hasShipP1() + "\n";
-            str += "hasP2Ship: " + hasShipP2() + "\n";
-            str += "hasP1Shot: " + hasShotP1() + "\n";
-            str += "hasP2Shot: " + hasShotP2() + "\n";
-            str += "hasP1Shark: " + hasSharkP1() + "\n";
-            str += "hasP2Shark: " + hasSharkP2() + "\n";
+
+            // Add bits
+            str += (this.hasSharkP1() ? "1" : "0");
+            str += (this.hasSharkP2() ? "1" : "0");
+            str += (this.hasShipP1() ? "1" : "0");
+            str += (this.hasShotP1() ? "1" : "0");
+            str += (this.hasShipP2() ? "1" : "0");
+            str += (this.hasShotP2() ? "1" : "0");
+
+            // Empty bits, can be added later
+            str += "00 ";
 
             return str;
         }
@@ -257,10 +262,12 @@ public final class Grid {
     @Override
     public String toString() {
         String str = "";
+        
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
-                str += "grid cell (" + i + ", " + j + "): " + this.mCells[i][j].toString();
+                str += this.mCells[i][j].toString();
             }
+            str += '\n';
         }
     
         return str;
