@@ -53,7 +53,7 @@
           <configuration>
             <archive>
               <manifest>
-                  <mainClass>com.belgianwaffles.battleship.Main</mainClass>
+                  <mainClass>com.belgianwaffles.battleshipserver.Main</mainClass>
               </manifest>
             </archive>
           </configuration>
