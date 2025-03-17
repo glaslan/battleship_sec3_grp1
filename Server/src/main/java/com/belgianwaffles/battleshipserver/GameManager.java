@@ -2,6 +2,7 @@ package com.belgianwaffles.battleshipserver;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Random;
 
 public class GameManager implements Runnable {
     
@@ -70,11 +71,114 @@ public class GameManager implements Runnable {
     
     // ----- Game ----- Methods -----
     
+    private int getShipsRemaining(Grid grid, int player) {
+        Grid.GridCell[][] matrix = grid.getCells();
+        int shipsLeft = 0;
+        if (player == 1){
+            for (int i = 0; i < Grid.GRID_SIZE; i++) {
+                for (int j = 0; j < Grid.GRID_SIZE; j++) {
+                    if (matrix[i][j].hasShipP1() && !(matrix[i][j].hasShotP2())) {
+                        shipsLeft++;
+                    }
+                }
+            }
+        }
+        else if (player == 2){
+            for (int i = 0; i < Grid.GRID_SIZE; i++) {
+                for (int j = 0; j < Grid.GRID_SIZE; j++) {
+                    if (matrix[i][j].hasShipP2() && !(matrix[i][j].hasShotP1())) {
+                        shipsLeft++;
+                    }
+                }
+            }
+        } 
+        else {
+            System.out.println("Invalid usage of this function");
+            return -1;
+        }
+        return shipsLeft;
+    }
+
+    private Grid generateSugarSharks(Grid grid) {
+        // odds of sugar shark = 1/chance
+        int chance = 10;
+        Random rng = new Random(System.currentTimeMillis());
+        for (int i = 0; i < Grid.GRID_SIZE; i++) {
+            for (int j = 0; j < Grid.GRID_SIZE; j++) {
+                // clear current sharks
+                grid.getCells()[i][j].setSharkP1(false);
+                grid.getCells()[i][j].setSharkP2(false);
+                // P1 sharks
+                // currently my logic is P1 shark means its a shark P1 can see
+                if (!grid.getCells()[i][j].hasShipP2() && !grid.getCells()[i][j].hasShotP1()) {
+                    grid.getCells()[i][j].setSharkP1((rng.nextInt(chance) == chance-1));
+                }
+                // P2 sharks
+                if (!grid.getCells()[i][j].hasShipP1() && !grid.getCells()[i][j].hasShotP2()) {
+                    grid.getCells()[i][j].setSharkP2((rng.nextInt(chance) == chance-1));
+                }
+            }
+        }
+        return grid;
+    }
+
+
+    private void sendPacket(Socket client, Packet packet) {
+        ConnectionManager.sendPacket(client, packet);
+    }
+
+    private Packet receivePacket(Socket client) {
+        return ConnectionManager.receivePacket(client);
+    }
+
+
     // ----- Start ----- End -----
     
     private void startGame() {
         System.out.println("Starting game on thread id=" + Thread.currentThread().threadId());
         // Setup game states
+        Packet packet = new Packet();
+        Grid grid = new Grid();
+        packet.serialize(grid);
+        // add/replace with flag: setupShips???
+        packet.addTurn(Packet.PACKET_TURN_PONE);
+        // temp fix to flag which user is which
+        packet.addUser((short) 1);
+        sendPacket(mClient1, packet);
+        // response from client
+        // does server need to maintain a copy of boards?
+        // also i think the clients need to know which is p1 and which is p2
+        packet = receivePacket(mClient1);
+        packet.addUser((short) 2);
+        sendPacket(mClient2, packet);
+        packet = receivePacket(mClient2);
+
+
+        /* 
+        // enter main game loop?
+        // my thoughts for the main loop functionality
+
+        // this should not pass by reference because of how get grid returns? java isnt a real language
+        packet.serialize(generateSugarSharks(packet.getGrid()));
+        // p1 turn
+        packet.addTurn(Packet.PACKET_TURN_PONE);
+        packet.addUser((short) 1);
+        sendPacket(mClient1, packet);
+        packet = receivePacket(mClient1);
+        if (getShipsRemaining(packet.getGrid(), 2) == 0) {
+            //p1 win
+        }
+        //p2 turn
+        packet.addTurn(Packet.PACKET_TURN_PTWO);
+        packet.addUser((short) 2);
+        sendPacket(mClient2, packet);
+        packet = receivePacket(mClient2);
+        if (getShipsRemaining(packet.getGrid(), 1) == 0) {
+            //p2 win
+        }
+
+        */
+        
     }
     
     private void endGame() {
