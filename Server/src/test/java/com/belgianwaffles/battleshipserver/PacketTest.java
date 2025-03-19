@@ -2,6 +2,7 @@ package com.belgianwaffles.battleshipserver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
@@ -123,7 +124,7 @@ public class PacketTest {
      * SVR-PKT-005
      */
     @Test
-    public void PacketThrowsIllegalState() {
+    public void PacketGridThrowsIllegalState() {
         // Arrange
         // Expected is an IllegalStateException throw
         
@@ -134,6 +135,55 @@ public class PacketTest {
         // Assert
         try {
             packet.getGrid();
+            fail("Test did not throw");
+        } catch (IllegalStateException e) {
+            assertTrue(true);
+        }
+    }
+    /**
+     * Pack an image into packet, then get image back
+     * SVR-PKT-006
+     */
+    @Test
+    public void PacketImageCreateReceive() {
+        // Arrange
+        int expectedLength = 54011;
+        int expectedType = Packet.PACKET_TYPE_IMAGE;
+        int expectedUser = 0;
+
+        // Act
+        Packet packet = new Packet();
+        packet.serialize("test-item.jpeg");
+        packet.addFlag(Packet.PACKET_FLAG_SHIP_OK);
+        Packet recv = new Packet();
+        recv.deserialize(packet.getBuffer());
+        // Ensure nothrow
+        recv.getImage();
+        
+        // Assert - since the class is not ours, best I can do is assert the image information in the packet
+        assertEquals(expectedLength, recv.getLength());
+        assertEquals(expectedType, recv.getType());
+        assertEquals(expectedUser, recv.getUser());
+        assertTrue(packet.hasFlag(Packet.PACKET_FLAG_SHIP_OK));
+        assertFalse(packet.hasFlag(Packet.PACKET_FLAG_SHIP_BROKE));
+        assertFalse(packet.hasFlag(Packet.PACKET_FLAG_WATER));
+    }
+    /**
+     * Test that a non image packet gets thrown
+     * SVR-PKT-007
+     */
+    @Test
+    public void PacketImageThrowsIllegalState() {
+        // Arrange
+        // Expected is an IllegalStateException throw
+        
+        // Act
+        Packet packet = new Packet();
+        packet.serialize();
+        
+        // Assert
+        try {
+            packet.getImage();
             fail("Test did not throw");
         } catch (IllegalStateException e) {
             assertTrue(true);
