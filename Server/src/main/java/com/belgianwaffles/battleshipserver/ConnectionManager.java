@@ -18,7 +18,7 @@ public final class ConnectionManager implements Runnable {
 
     // ----- Data -----
 
-    private ServerSocket mServer;
+    private final ServerSocket mServer;
     private Socket mClient1, mClient2;
     private boolean mRunningServer;
 

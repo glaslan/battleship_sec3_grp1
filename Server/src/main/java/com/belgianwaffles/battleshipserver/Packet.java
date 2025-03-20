@@ -3,6 +3,7 @@ package com.belgianwaffles.battleshipserver;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+
 import javax.swing.ImageIcon;
 
 public final class Packet {
@@ -179,12 +180,9 @@ public final class Packet {
             // Packet type
             String str = "Packet type: ";
             switch (this.getType()) {
-            case PACKET_TYPE_PING:
-                str += "Ping";
-                break;
-            case PACKET_TYPE_GRID:
-                str += "Grid";
-                break;
+                case PACKET_TYPE_PING -> str += "Ping";
+                case PACKET_TYPE_GRID -> str += "Grid";
+                case PACKET_TYPE_IMAGE-> str += "Image";
             }
 
             // Length
