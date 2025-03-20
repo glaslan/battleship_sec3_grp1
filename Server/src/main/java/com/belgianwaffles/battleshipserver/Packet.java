@@ -1,10 +1,15 @@
 package com.belgianwaffles.battleshipserver;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import javax.swing.ImageIcon;
+
 public final class Packet {
 
     // ----- Header -----
 
-    public static final int HEADER_SIZE        = 5;
+    public static final int HEADER_SIZE        = 7;
 
     private final class Header {
         
@@ -89,9 +94,11 @@ public final class Packet {
          * Adds length to the packet
          * @param length length of the packet body
          */
-        public void addLength(short length) {
-            this.bitManipulate(HEAD_INDEX_LENGTH, HEAD_MASK_LENGTH, (byte)((length & 0xff00) >> 8));
-            this.bitManipulate(HEAD_INDEX_LENGTH + 1, HEAD_MASK_LENGTH, (byte)(length & 0x00ff));
+        public void addLength(int length) {
+            this.bitManipulate(HEAD_INDEX_LENGTH,     HEAD_MASK_LENGTH, (byte)((length & 0xff000000) >> 24));
+            this.bitManipulate(HEAD_INDEX_LENGTH + 1, HEAD_MASK_LENGTH, (byte)((length & 0x00ff0000) >> 16));
+            this.bitManipulate(HEAD_INDEX_LENGTH + 2, HEAD_MASK_LENGTH, (byte)((length & 0x0000ff00) >> 8));
+            this.bitManipulate(HEAD_INDEX_LENGTH + 3, HEAD_MASK_LENGTH, (byte)((length & 0x000000ff)));
         }
 
 
@@ -133,7 +140,7 @@ public final class Packet {
             int bit2 = this.mData[HEAD_INDEX_USER + 1] & 0b10000000;
 
             // Get rest of byte
-            int byte1 = ((int)(this.mData[HEAD_INDEX_USER] & 0b01111111) << 8) | bit1;
+            int byte1 = ((int)(this.mData[HEAD_INDEX_USER] & 0b01111111) << 8) | (bit1 << 8);
             int byte2 = ((int)(this.mData[HEAD_INDEX_USER + 1] & 0b01111111)) | bit2;
             
             return byte1 | byte2;
@@ -145,14 +152,18 @@ public final class Packet {
          */
         public int getLength() {
             // Get bits to prevent negative shenanigans
-            int bit1 = this.mData[HEAD_INDEX_LENGTH] & 0b10000000;
+            int bit1 = this.mData[HEAD_INDEX_LENGTH]     & 0b10000000;
             int bit2 = this.mData[HEAD_INDEX_LENGTH + 1] & 0b10000000;
+            int bit3 = this.mData[HEAD_INDEX_LENGTH + 2] & 0b10000000;
+            int bit4 = this.mData[HEAD_INDEX_LENGTH + 3] & 0b10000000;
 
             // Get rest of byte
-            int byte1 = ((int)(this.mData[HEAD_INDEX_LENGTH] & 0b01111111) << 8) | bit1;
-            int byte2 = ((int)(this.mData[HEAD_INDEX_LENGTH + 1] & 0b01111111)) | bit2;
+            int byte1 = ((int)(this.mData[HEAD_INDEX_LENGTH]     & 0b01111111) << 24) | (bit1 << 24);
+            int byte2 = ((int)(this.mData[HEAD_INDEX_LENGTH + 1] & 0b01111111) << 16) | (bit2 << 16);
+            int byte3 = ((int)(this.mData[HEAD_INDEX_LENGTH + 2] & 0b01111111) << 8)  | (bit3 << 8);
+            int byte4 = ((int)(this.mData[HEAD_INDEX_LENGTH + 3] & 0b01111111))       | (bit4);
 
-            return byte1 | byte2;
+            return (byte1 | byte2 | byte3 | byte4);
         }
         
         /**
@@ -193,15 +204,21 @@ public final class Packet {
 
     // ----- Constants -----
 
-    public static final byte PACKET_FLAG_NONE   = 0;
+    public static final byte PACKET_FLAG_NONE       = (byte)0b00000000;
+    public static final byte PACKET_FLAG_SHIP_OK    = (byte)0b10000000;
+    public static final byte PACKET_FLAG_SHIP_BROKE = (byte)0b01000000;
+    public static final byte PACKET_FLAG_WATER      = (byte)0b00100000;
 
-    public static final byte PACKET_TURN_PONE   = 0;
-    public static final byte PACKET_TURN_PTWO   = 1;
+    public static final byte PACKET_TURN_PONE       = 0;
+    public static final byte PACKET_TURN_PTWO       = 1;
     
-    public static final byte PACKET_TYPE_NONE   = 0;
-    public static final byte PACKET_TYPE_PING   = 1;
-    public static final byte PACKET_TYPE_GRID   = 2;
-    public static final int  PACKET_TAIL_SIZE   = 1;
+    public static final byte PACKET_TYPE_NONE       = 0;
+    public static final byte PACKET_TYPE_PING       = 1;
+    public static final byte PACKET_TYPE_GRID       = 2;
+    public static final byte PACKET_TYPE_IMAGE      = 3;
+    public static final int  PACKET_TAIL_SIZE       = 1;
+
+    private static final String PACKET_IMAGE_PATH   = "../Assets/";
     
 
 
@@ -243,7 +260,7 @@ public final class Packet {
      * Requires body to be initialized to 
      */
     private void setHeader() {
-        this.mHeader.addLength((short)this.mBody.length);
+        this.mHeader.addLength(this.mBody.length);
         this.mData = new byte[HEADER_SIZE + this.mHeader.getLength() + PACKET_TAIL_SIZE];
         System.arraycopy(this.mHeader.getData(), 0, this.mData, 0, HEADER_SIZE);
     }
@@ -320,6 +337,27 @@ public final class Packet {
             this.setByte(i, cells[i / Grid.GRID_SIZE][i % Grid.GRID_SIZE].getCell());
         }
         
+        // Pack data to packet
+        this.pack();
+    }
+
+    /**
+     * Serialized an image packet to send assets to the client
+     * Recommended to set the flag for type after serializing
+     * @param filename the name of the image file that will be sent to the client
+     */
+    public void serialize(String filename) {
+        this.mHeader.addType(PACKET_TYPE_IMAGE);
+
+        // Prepare
+        try {
+            File file = new File(PACKET_IMAGE_PATH + filename);
+            this.mBody = Files.readAllBytes(file.toPath());
+        } catch (IOException e) {
+            FileLogger.logError(Packet.class, "serialize(String)", "Could not read from file...");
+            return;
+        }
+
         // Pack data to packet
         this.pack();
     }
@@ -430,21 +468,32 @@ public final class Packet {
         if ((byte)this.getType() != PACKET_TYPE_GRID) {
             throw new IllegalStateException();
         }
-        
         return new Grid(this.mBody);
     }
 
+    /**
+     * Gets an image object from a packet
+     * @return Image from packet body
+     * @throws IllegalStateException if not of type PACKET_TYPE_IMAGE
+     */
+    public ImageIcon getImage() throws IllegalStateException {
+        if ((byte)this.getType() != PACKET_TYPE_IMAGE) {
+            throw new IllegalStateException();
+        }
+        return new ImageIcon(this.mBody);
+    }
 
+    /**
+     * Allows for the packet to easily be printed to a file
+     * @return a formatted string for a file
+     */
     @Override
     public String toString() {
         String str = this.mHeader.toString();
         switch (this.getType()) {
-        case PACKET_TYPE_PING:
-            str += this.pingString();
-            break;
-        case PACKET_TYPE_GRID:
-            str += this.gridString();
-            break;
+            case PACKET_TYPE_PING -> str += this.pingString();
+            case PACKET_TYPE_GRID -> str += this.gridString();
+            case PACKET_TYPE_IMAGE-> str += this.assetString();
         }
         return str;
     }
@@ -456,5 +505,22 @@ public final class Packet {
 
     private String gridString() {
         return this.getGrid().toString();
+    }
+
+    private String assetString() {
+        String str = "Sent icon of type: ";
+        if (this.hasFlag(PACKET_FLAG_WATER)) {
+            str += "Water";
+        }
+        else if (this.hasFlag(PACKET_FLAG_SHIP_OK)) {
+            str += "Ship-Ok";
+        }
+        else if (this.hasFlag(PACKET_FLAG_SHIP_BROKE)) {
+            str += "Ship-Broken";
+        }
+        else {
+            str += "Unknown";
+        }
+        return str;
     }
 }
