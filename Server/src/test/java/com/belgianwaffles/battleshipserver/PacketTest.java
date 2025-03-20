@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 public class PacketTest {
     /**
      * Creates a ping packet and tests that there is no data inside it.
-     * Packet should have a size of 7 (Head = 5, Body = 1, Tail = 1), but no data in that byte.
+     * Packet should have a size of 9 (Head = 7, Body = 1, Tail = 1), but no data in that byte.
      * SVR-PKT-001
      */
     @Test
@@ -147,7 +147,8 @@ public class PacketTest {
     @Test
     public void PacketImageCreateReceive() {
         // Arrange
-        int expectedLength = 54011;
+        // Length from using Windows properties function on image and finding size
+        int expectedLength = 2669115;
         int expectedType = Packet.PACKET_TYPE_IMAGE;
         int expectedUser = 0;
 

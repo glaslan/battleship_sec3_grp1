@@ -9,7 +9,7 @@ public final class Packet {
 
     // ----- Header -----
 
-    public static final int HEADER_SIZE        = 5;
+    public static final int HEADER_SIZE        = 7;
 
     private final class Header {
         
@@ -94,9 +94,11 @@ public final class Packet {
          * Adds length to the packet
          * @param length length of the packet body
          */
-        public void addLength(short length) {
-            this.bitManipulate(HEAD_INDEX_LENGTH, HEAD_MASK_LENGTH, (byte)((length & 0xff00) >> 8));
-            this.bitManipulate(HEAD_INDEX_LENGTH + 1, HEAD_MASK_LENGTH, (byte)(length & 0x00ff));
+        public void addLength(int length) {
+            this.bitManipulate(HEAD_INDEX_LENGTH,     HEAD_MASK_LENGTH, (byte)((length & 0xff000000) >> 24));
+            this.bitManipulate(HEAD_INDEX_LENGTH + 1, HEAD_MASK_LENGTH, (byte)((length & 0x00ff0000) >> 16));
+            this.bitManipulate(HEAD_INDEX_LENGTH + 2, HEAD_MASK_LENGTH, (byte)((length & 0x0000ff00) >> 8));
+            this.bitManipulate(HEAD_INDEX_LENGTH + 3, HEAD_MASK_LENGTH, (byte)((length & 0x000000ff)));
         }
 
 
@@ -150,14 +152,18 @@ public final class Packet {
          */
         public int getLength() {
             // Get bits to prevent negative shenanigans
-            int bit1 = this.mData[HEAD_INDEX_LENGTH] & 0b10000000;
+            int bit1 = this.mData[HEAD_INDEX_LENGTH]     & 0b10000000;
             int bit2 = this.mData[HEAD_INDEX_LENGTH + 1] & 0b10000000;
+            int bit3 = this.mData[HEAD_INDEX_LENGTH + 2] & 0b10000000;
+            int bit4 = this.mData[HEAD_INDEX_LENGTH + 3] & 0b10000000;
 
             // Get rest of byte
-            int byte1 = ((int)(this.mData[HEAD_INDEX_LENGTH] & 0b01111111) << 8) | (bit1 << 8);
-            int byte2 = ((int)(this.mData[HEAD_INDEX_LENGTH + 1] & 0b01111111)) | bit2;
+            int byte1 = ((int)(this.mData[HEAD_INDEX_LENGTH]     & 0b01111111) << 24) | (bit1 << 24);
+            int byte2 = ((int)(this.mData[HEAD_INDEX_LENGTH + 1] & 0b01111111) << 16) | (bit2 << 16);
+            int byte3 = ((int)(this.mData[HEAD_INDEX_LENGTH + 2] & 0b01111111) << 8)  | (bit3 << 8);
+            int byte4 = ((int)(this.mData[HEAD_INDEX_LENGTH + 3] & 0b01111111))       | (bit4);
 
-            return byte1 | byte2;
+            return (byte1 | byte2 | byte3 | byte4);
         }
         
         /**
@@ -254,7 +260,7 @@ public final class Packet {
      * Requires body to be initialized to 
      */
     private void setHeader() {
-        this.mHeader.addLength((short)this.mBody.length);
+        this.mHeader.addLength(this.mBody.length);
         this.mData = new byte[HEADER_SIZE + this.mHeader.getLength() + PACKET_TAIL_SIZE];
         System.arraycopy(this.mHeader.getData(), 0, this.mData, 0, HEADER_SIZE);
     }
