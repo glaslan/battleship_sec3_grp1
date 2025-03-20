@@ -76,16 +76,19 @@ public final class ConnectionManager implements Runnable {
             }
 
             // Attempt to start game
-            if (this.startGame(this.mClient1, this.mClient2)) {
+            if (!this.startGame(this.mClient1, this.mClient2)) {
                 // Failed to start game
+                System.out.println("Could not start game");
 
                 // Check if client 2 disconnected
                 if (!this.checkConnection(this.mClient2)) {
+                    System.out.println("Disconnecting client 2");
                     this.mClient2 = null;
                 }
                 // Check if client 1 disconnected
                 // Can move client 2 in always since both will be null anyway
                 if (!this.checkConnection(this.mClient1)) {
+                    System.out.println("Disconnecting client 1");
                     this.mClient1 = this.mClient2;
                 }
             }

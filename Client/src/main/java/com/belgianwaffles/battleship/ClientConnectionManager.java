@@ -3,9 +3,8 @@ package com.belgianwaffles.battleship;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
-
-import com.belgianwaffles.battleship.DataPacket.Header;
 
 public class ClientConnectionManager implements Runnable{
 
@@ -33,54 +32,68 @@ public class ClientConnectionManager implements Runnable{
             return;
         }
 
-        while (true) { 
-
+        while (true) {
             try {
-                var input = new DataInputStream(connectionSocket.getInputStream());
-                byte[] head = new byte[Header.HEADER_SIZE];
-            
-                // Read header
-                if (input.read(head, 0, head.length) == -1) {
-                    System.out.println("No connection");
-                    break;
+                Packet packet = this.receivePacket();
+                if (packet == null) {
+                    continue;
                 }
 
-                // Create packet and check for ping
-                DataPacket rec = new DataPacket(head);
-                if (rec.getType() == DataPacket.PACKET_TYPE_PING) {
-                    pingServer();
-                    byte[] clear = new byte[1000];
-                    input.read(clear, 0, clear.length);
-                    continue;
-                }
-                System.out.println("How");
-                
-                // Read body and tail
-                byte[] body = new byte[rec.getLength()];
-                if (input.read(head, 0, head.length) == -1) {
-                    continue;
+                // Determine what to do with the packet
+                switch (packet.getType()) {
+                    case Packet.PACKET_TYPE_PING -> this.pingServer();
+                    case Packet.PACKET_TYPE_GRID -> this.exampleFun(packet);
                 }
             } catch (IOException e) {
                 break;
             }
-            
         }
+    }
 
-        
+    private void exampleFun(Packet packet) {
+        // Example of what to do with different types of packets
+        Grid grid = packet.getGrid();
+        System.out.println(grid);
+    }
+    
+    /**
+     * Awaits and receives a packet from the server
+     * @return a serialized packet with data from the server
+     */
+    private Packet receivePacket() {
+        try {
+            // Get socket input
+            InputStream input = new DataInputStream(connectionSocket.getInputStream());
+    
+            // Read the head from the server
+            Packet packet = new Packet();
+            byte[] head = input.readNBytes(Packet.HEADER_SIZE);
+            packet.deserialize(head);
+    
+            // Get the packet body
+            byte[] body = input.readNBytes(packet.getLength() + Packet.PACKET_TAIL_SIZE);
             
-            
+            // Add all items to packet
+            byte[] bytes = new byte[head.length + body.length];
+            System.arraycopy(head, 0, bytes, 0, head.length);
+            System.arraycopy(body, 0, bytes, head.length, body.length);
+
+            // Pack into packet
+            packet.deserialize(bytes);
+
+            // Return the packet
+            return packet;
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     public void pingServer() throws IOException {
 
-        DataPacket packet = new DataPacket();
-        packet.serializeData();
+        Packet packet = new Packet();
+        packet.serialize();
 
         var output = new DataOutputStream(connectionSocket.getOutputStream());
         output.write(packet.getBuffer());
-
     }
-
-    
-    
 }
