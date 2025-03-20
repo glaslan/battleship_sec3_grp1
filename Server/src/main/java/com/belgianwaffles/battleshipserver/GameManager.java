@@ -41,7 +41,6 @@ public class GameManager implements Runnable {
     @Override
     @SuppressWarnings("ConvertToTryWithResources")
     public void run() {
-        System.out.println("Starting new game");
         // Setup game state
         this.startGame();
         

@@ -76,7 +76,12 @@ public final class ConnectionManager implements Runnable {
             }
 
             // Attempt to start game
-            if (!this.startGame(this.mClient1, this.mClient2)) {
+            if (this.startGame(this.mClient1, this.mClient2)) {
+                // Successfully started game
+                this.mClient1 = null;
+                this.mClient2 = null;
+            }
+            else {
                 // Failed to start game
                 System.out.println("Could not start game");
 
