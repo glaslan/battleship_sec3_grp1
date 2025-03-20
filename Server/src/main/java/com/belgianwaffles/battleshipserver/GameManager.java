@@ -2,18 +2,21 @@ package com.belgianwaffles.battleshipserver;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class GameManager implements Runnable {
     
     // ----- Constants -----
     
-    private static int SLEEP_TIME = 5000;
+    private static final int SLEEP_TIME = 5;
 
 
 
     // ----- Data -----
     
-    private Socket mClient1, mClient2;
+    private final Socket mClient1, mClient2;
     private boolean mGameOver;
 
     private static boolean sServerClosed;
@@ -36,6 +39,7 @@ public class GameManager implements Runnable {
     // ----- Threading -----
     
     @Override
+    @SuppressWarnings("ConvertToTryWithResources")
     public void run() {
         System.out.println("Starting new game");
         // Setup game state
@@ -43,25 +47,19 @@ public class GameManager implements Runnable {
         
         // Create thread for pinging clients
         Runnable pingThread = () -> {
-            while (!this.mGameOver && !sServerClosed) {
-                try {
-                    Thread.sleep(SLEEP_TIME);
-                    GameManager.this.pingClients();
-                } catch (InterruptedException e) {
-                    FileLogger.logError(GameManager.class, "run()", 
-            "Thread interrupted");
-                    System.err.println("Thread interrupted");
-                }
+            if (!this.mGameOver && !sServerClosed) {
+                GameManager.this.pingClients();
             }
         };
-        Thread t = new Thread(pingThread);
-        t.setDaemon(true);
-        t.start();
+        // Ping every SLEEP_TIME seconds
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.scheduleAtFixedRate(pingThread, SLEEP_TIME, SLEEP_TIME, TimeUnit.SECONDS);
 
         // Main loop
         while (this.play()) {}
         
         // Actions for game end
+        executor.close();
         this.endGame();
         System.out.println("Closed thread id=" + Thread.currentThread().threadId());
     }
@@ -83,21 +81,13 @@ public class GameManager implements Runnable {
         // Close client1
         try {
             this.mClient1.close();
-        } catch (IOException e) {
-            System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
-        }
-        catch (NullPointerException e) {
+        } catch (IOException | NullPointerException e) {
             System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
         }
         // Close client 2
         try {
             this.mClient2.close();
-        } catch (IOException e) {
-            FileLogger.logError(GameManager.class, "endGame()", 
-            "Failed to close clients on thread id=" + Thread.currentThread().threadId());
-            System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
-        }
-        catch (NullPointerException e) {
+        } catch (IOException | NullPointerException e) {
             FileLogger.logError(GameManager.class, "endGame()", 
             "Failed to close clients on thread id=" + Thread.currentThread().threadId());
             System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());

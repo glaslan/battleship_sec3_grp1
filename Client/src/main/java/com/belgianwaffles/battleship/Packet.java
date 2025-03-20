@@ -1,4 +1,4 @@
-package com.belgianwaffles.battleshipserver;
+package com.belgianwaffles.battleship;
 
 import java.io.File;
 import java.io.IOException;
@@ -272,7 +272,6 @@ public final class Packet {
         try {
             this.mBody[index] = data;
         } catch (IndexOutOfBoundsException e) {
-            FileLogger.logError(Packet.class, "setByte(int, byte)",  "Body out of bounds");
             System.err.println("Body out of bounds");
         }
     }
@@ -352,7 +351,6 @@ public final class Packet {
             File file = new File(PACKET_IMAGE_PATH + filename);
             this.mBody = Files.readAllBytes(file.toPath());
         } catch (IOException e) {
-            FileLogger.logError(Packet.class, "serialize(String)", "Could not read from file...");
             return;
         }
 
