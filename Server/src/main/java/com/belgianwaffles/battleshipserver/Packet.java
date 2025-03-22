@@ -127,8 +127,8 @@ public final class Packet {
          * Gets the current players turn type
          * @return which players turn it is. Check with PACKET_TURN_P(ONE/TWO)
          */
-        public int getTurn() {
-            return (this.mData[HEAD_INDEX_TURN] & HEAD_MASK_TURN);
+        public boolean isTurn() {
+            return (this.mData[HEAD_INDEX_TURN] & HEAD_MASK_TURN) == HEAD_MASK_TURN;
         }
         
         /**
@@ -202,11 +202,15 @@ public final class Packet {
 
     // ----- Constants -----
 
+    // ----- Image ----- Flags -----
+    
     public static final byte PACKET_FLAG_NONE       = (byte)0b00000000;
     public static final byte PACKET_FLAG_SHIP_OK    = (byte)0b10000000;
     public static final byte PACKET_FLAG_SHIP_BROKE = (byte)0b01000000;
     public static final byte PACKET_FLAG_WATER      = (byte)0b00100000;
 
+    // ----- Grid ----- Flags -----
+    
     public static final byte PACKET_TURN_PONE       = 0;
     public static final byte PACKET_TURN_PTWO       = 1;
     
@@ -432,10 +436,10 @@ public final class Packet {
     
     /**
      * Gets the current players turn type
-     * @return which players turn it is. Check with PACKET_TURN_P(ONE/TWO)
+     * @return if it is your turn to play
      */
-    public int getTurn() {
-        return this.mHeader.getTurn();
+    public boolean isTurn() {
+        return this.mHeader.isTurn();
     }
     
     /**
