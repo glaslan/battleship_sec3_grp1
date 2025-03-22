@@ -36,8 +36,6 @@ public class GameWindow extends JFrame implements ActionListener {
     private ArrayList<WindowComponent> elements = new ArrayList<>();
     private ArrayList<AssetImage> loadedImages = new ArrayList<>();
 
-    private Grid grid;
-
     // for removing clutter in the constructor
     private void buttonInit(JButton button, double x_bound, double y_bound, double width, double height) {
 
@@ -242,7 +240,7 @@ public class GameWindow extends JFrame implements ActionListener {
         }
     }
 
-    public void updatePlayerBoard() {
+    public void updatePlayerBoard(Grid grid) {
         Grid.GridCell[][] cells = grid.getCells();
         for (int i = 0; i < Constants.BOARD_DIMENSIONS; i++) {
             for (int j = 0; j < Constants.BOARD_DIMENSIONS; j++) {
