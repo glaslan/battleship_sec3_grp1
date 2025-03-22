@@ -1,7 +1,14 @@
 package com.belgianwaffles.battleship;
 
-import java.awt.event.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -16,12 +23,13 @@ public class GameWindow extends JFrame implements ActionListener {
 
     private JButton b_Connect;
     private JButton b_Exit;
-    private JButton[][] playerBoardButtons;
-    private JButton[][] opponentBoardButtons;
+    private JLabel[][] playerBoardButtons;
+    private JLabel[][] opponentBoardButtons;
 
     private JLabel l_title;
 
     private boolean clientTurn;
+    private boolean inGame;
 
     private ClientConnectionManager connection;
 
@@ -58,14 +66,9 @@ public class GameWindow extends JFrame implements ActionListener {
                 p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
                 p.getY() >= getWindowYPosition(element.getBoundY()) &&
                 p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) {
-            System.out.println(getWindowXPosition(element.getBoundX()));
-            System.out.println(getWindowXPosition(element.getBoundX() + element.getWidth()));
-            System.out.println(getWindowYPosition(element.getBoundY()));
-            System.out.println(getWindowYPosition(element.getBoundY() + element.getHeight()));
             return true;
 
-        }
-        return false;
+        }   return false;
     }
 
     private int getWindowXPosition(double relative) {
@@ -105,15 +108,15 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setVisible(true);
         this.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.inGame = false;
 
         // Buttons
-        AssetImage test = new AssetImage(new ImageIcon("assets/ThisBeAnAsset.png"), 0.6, 0.15, Constants.WINDOW_WIDTH,
-                Constants.WINDOW_HEIGHT);
+        AssetImage test = new AssetImage(new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png"), 0.6, 0.15, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         imageInit(test);
 
-        addBoardButtons();
+        // addBoardButtons();
 
-        b_Connect = new JButton("Connect");
+        b_Connect = new JButton(test);
         buttonInit(b_Connect, 0.05, 0.8, 0.4, 0.15);
         b_Connect.setVisible(true);
 
@@ -148,12 +151,20 @@ public class GameWindow extends JFrame implements ActionListener {
 
             @Override
             public void mousePressed(MouseEvent e) {
+                
 
-                System.out.println("Mouse clicked at: " + e.getPoint());
-
-                if (clicked(getWindowComponent(l_title), e.getPoint())) {
-                    System.out.println("Im a title");
+                if (inGame) {
+                    for (int x = 0;x<Constants.BOARD_DIMENSIONS;x++) {
+                    for (int y = 0;y<Constants.BOARD_DIMENSIONS;y++) {
+                        if (clicked(getWindowComponent(playerBoardButtons[x][y]), e.getPoint())) {
+                            System.out.println("Player: " + x + "," + y);
+                        }
+                        else if (clicked(getWindowComponent(opponentBoardButtons[x][y]), e.getPoint())) {
+                            System.out.println("Opponent: " + x + "," + y);
+                        }
+                    }}
                 }
+                
             }
         });
 
@@ -166,14 +177,12 @@ public class GameWindow extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        if (e.getSource() == b_Connect) {
-            connectToServer();
-        }
 
     }
 
     private void startGame() {
         clientTurn = false;
+        inGame = true;
     }
 
     private void connectToServer() {
@@ -187,29 +196,36 @@ public class GameWindow extends JFrame implements ActionListener {
     }
 
     private void addBoardButtons() {
-        playerBoardButtons = new JButton[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
-        opponentBoardButtons = new JButton[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
+        playerBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
+        opponentBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
+        
         float firstBoardPosition = 0.05f;
         float secondBoardPosition = 0.55f;
         float offsetY = 0.05f;
+        float widthRatio = (10.0f/16.0f);
+        float tileHeight = 0.08f;
+        float tileWidth = tileHeight * widthRatio;
+
+        AssetImage tileImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png"), tileWidth, tileHeight, getWidth(), getHeight());
+        imageInit(tileImg);
         // First board
         for (int i = 0; i < Constants.BOARD_DIMENSIONS; i++) {
             for (int j = 0; j < Constants.BOARD_DIMENSIONS; j++) {
-                playerBoardButtons[i][j] = new JButton();
-                buttonInit(playerBoardButtons[i][j], firstBoardPosition + (double) j * 0.05, offsetY + (double) i * 0.05,
-                        0.05, 0.05);
-                playerBoardButtons[i][j].setBackground(Color.getHSBColor(24f, 0.25f, 0.42f));
+
+                // first board
+                playerBoardButtons[i][j] = new JLabel(tileImg);
+                componentInit(playerBoardButtons[i][j], firstBoardPosition + (double) j * tileWidth, offsetY + (double) i * tileHeight,
+                        tileWidth, tileHeight);
+                playerBoardButtons[i][j].setBorder(BorderFactory.createLineBorder(Color.black));
                 playerBoardButtons[i][j].setVisible(true);
-            }
-        }
-        // Second board
-        for (int i = 0; i < Constants.BOARD_DIMENSIONS; i++) {
-            for (int j = 0; j < Constants.BOARD_DIMENSIONS; j++) {
-                opponentBoardButtons[i][j] = new JButton();
-                buttonInit(opponentBoardButtons[i][j], secondBoardPosition + (double) j * 0.05, offsetY + (double) i * 0.05,
-                        0.05, 0.05);
-                opponentBoardButtons[i][j].setBackground(Color.getHSBColor(24f, 0.25f, 0.42f));
+
+                // second board
+                opponentBoardButtons[i][j] = new JLabel(tileImg);
+                componentInit(opponentBoardButtons[i][j], secondBoardPosition + (double) j * tileWidth, offsetY + (double) i * tileHeight,
+                        tileWidth, tileHeight);
+                opponentBoardButtons[i][j].setBorder(BorderFactory.createLineBorder(Color.black));
                 opponentBoardButtons[i][j].setVisible(true);
+
             }
         }
     }
