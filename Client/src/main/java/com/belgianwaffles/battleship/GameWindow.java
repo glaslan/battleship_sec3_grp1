@@ -36,8 +36,6 @@ public class GameWindow extends JFrame implements ActionListener {
     private ArrayList<WindowComponent> elements = new ArrayList<>();
     private ArrayList<AssetImage> loadedImages = new ArrayList<>();
 
-    private Grid grid;
-
     // for removing clutter in the constructor
     private void buttonInit(JButton button, double x_bound, double y_bound, double width, double height) {
 
@@ -64,14 +62,14 @@ public class GameWindow extends JFrame implements ActionListener {
     private boolean clicked(WindowComponent element, Point p) {
 
         // check if within x
-        if (p.getX() >= getWindowXPosition(element.getBoundX()) && 
-            p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
-            p.getY() >= getWindowYPosition(element.getBoundY()) && 
-            p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) 
-        {
+        if (p.getX() >= getWindowXPosition(element.getBoundX()) &&
+                p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
+                p.getY() >= getWindowYPosition(element.getBoundY()) &&
+                p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) {
             return true;
 
-        }   return false;
+        }
+        return false;
     }
 
     private int getWindowXPosition(double relative) {
@@ -114,7 +112,8 @@ public class GameWindow extends JFrame implements ActionListener {
         this.inGame = false;
 
         // Buttons
-        AssetImage test = new AssetImage(new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png"), 0.6, 0.15, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+        AssetImage test = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ThisBeAnAsset.png"), 0.6, 0.15,
+                Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         imageInit(test);
 
         // addBoardButtons();
@@ -139,8 +138,6 @@ public class GameWindow extends JFrame implements ActionListener {
         b_Connect.setBorder(BorderFactory.createLineBorder(Color.black));
         b_Connect.setBackground(Color.BLUE);
         b_Connect.setVisible(true);
-
-
 
         getContentPane().addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
@@ -170,22 +167,19 @@ public class GameWindow extends JFrame implements ActionListener {
                 
 
                 if (inGame) {
-                    for (int x = 0;x<Constants.BOARD_DIMENSIONS;x++) {
-                    for (int y = 0;y<Constants.BOARD_DIMENSIONS;y++) {
-                        if (clicked(getWindowComponent(playerBoardButtons[x][y]), e.getPoint())) {
-                            System.out.println("Player: " + x + "," + y);
+                    for (int x = 0; x < Constants.BOARD_DIMENSIONS; x++) {
+                        for (int y = 0; y < Constants.BOARD_DIMENSIONS; y++) {
+                            if (clicked(getWindowComponent(playerBoardButtons[x][y]), e.getPoint())) {
+                                System.out.println("Player: " + x + "," + y);
+                            } else if (clicked(getWindowComponent(opponentBoardButtons[x][y]), e.getPoint())) {
+                                System.out.println("Opponent: " + x + "," + y);
+                            }
                         }
-                        else if (clicked(getWindowComponent(opponentBoardButtons[x][y]), e.getPoint())) {
-                            System.out.println("Opponent: " + x + "," + y);
-                        }
-                    }}
+                    }
                 }
-                
+
             }
         });
-
-
-
 
         clientTurn = false;
         //this.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
@@ -195,7 +189,6 @@ public class GameWindow extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
 
     }
 
@@ -229,15 +222,16 @@ public class GameWindow extends JFrame implements ActionListener {
     private void addBoardButtons() {
         playerBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
         opponentBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
-        
+
         float firstBoardPosition = 0.05f;
         float secondBoardPosition = 0.55f;
         float offsetY = 0.05f;
-        float widthRatio = (10.0f/16.0f);
+        float widthRatio = (10.0f / 16.0f);
         float tileHeight = 0.08f;
         float tileWidth = tileHeight * widthRatio;
 
-        AssetImage tileImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png"), tileWidth, tileHeight, getWidth(), getHeight());
+        AssetImage tileImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ThisBeAnAsset.png"), tileWidth,
+                tileHeight, getWidth(), getHeight());
         imageInit(tileImg);
         // First board
         for (int i = 0; i < Constants.BOARD_DIMENSIONS; i++) {
@@ -245,14 +239,16 @@ public class GameWindow extends JFrame implements ActionListener {
 
                 // first board
                 playerBoardButtons[i][j] = new JLabel(tileImg);
-                componentInit(playerBoardButtons[i][j], firstBoardPosition + (double) j * tileWidth, offsetY + (double) i * tileHeight,
+                componentInit(playerBoardButtons[i][j], firstBoardPosition + (double) j * tileWidth,
+                        offsetY + (double) i * tileHeight,
                         tileWidth, tileHeight);
                 playerBoardButtons[i][j].setBorder(BorderFactory.createLineBorder(Color.black));
                 playerBoardButtons[i][j].setVisible(true);
 
                 // second board
                 opponentBoardButtons[i][j] = new JLabel(tileImg);
-                componentInit(opponentBoardButtons[i][j], secondBoardPosition + (double) j * tileWidth, offsetY + (double) i * tileHeight,
+                componentInit(opponentBoardButtons[i][j], secondBoardPosition + (double) j * tileWidth,
+                        offsetY + (double) i * tileHeight,
                         tileWidth, tileHeight);
                 opponentBoardButtons[i][j].setBorder(BorderFactory.createLineBorder(Color.black));
                 opponentBoardButtons[i][j].setVisible(true);
@@ -261,7 +257,7 @@ public class GameWindow extends JFrame implements ActionListener {
         }
     }
 
-    private void updatePlayerBoard() {
+    public void updatePlayerBoard(Grid grid) {
         Grid.GridCell[][] cells = grid.getCells();
         for (int i = 0; i < Constants.BOARD_DIMENSIONS; i++) {
             for (int j = 0; j < Constants.BOARD_DIMENSIONS; j++) {
@@ -279,6 +275,7 @@ public class GameWindow extends JFrame implements ActionListener {
                         playerBoardButtons[i][j].setBackground(Color.getHSBColor(54f, 0.25f, 0.42f));
                         break;
                     case 4:
+                        playerBoardButtons[i][j].setIcon(new ImageIcon(Constants.ASSET_PATH + "cup.svg"));
                         playerBoardButtons[i][j].setBackground(Color.getHSBColor(64f, 0.25f, 0.42f));
                         break;
                     default:
