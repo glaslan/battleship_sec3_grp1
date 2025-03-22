@@ -2,6 +2,8 @@ package com.belgianwaffles.battleship;
 
 import javax.swing.ImageIcon;
 
+
+//call grid.getcells() to get a copy of the grid
 public class Segment extends GameObject {
     
     private String assetPath;
