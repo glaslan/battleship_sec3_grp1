@@ -2,7 +2,6 @@ package com.belgianwaffles.battleship;
 
 import java.awt.Color;
 import java.awt.Point;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -30,6 +29,7 @@ public class GameWindow extends JFrame implements ActionListener {
 
     private boolean clientTurn;
     private boolean inGame;
+    private boolean isTurn;
 
     private ClientConnectionManager connection;
 
@@ -163,6 +163,10 @@ public class GameWindow extends JFrame implements ActionListener {
 
             @Override
             public void mousePressed(MouseEvent e) {
+
+                if (clicked(getWindowComponent(b_Connect), e.getPoint())) {
+                    connectToServer();
+                }
                 
 
                 if (inGame) {
@@ -184,8 +188,8 @@ public class GameWindow extends JFrame implements ActionListener {
 
 
         clientTurn = false;
-        this.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
-                (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+        //this.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
+          //      (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
 
     }
 
@@ -195,14 +199,26 @@ public class GameWindow extends JFrame implements ActionListener {
 
     }
 
-    private void startGame() {
+    public void startGame(boolean turn) {
+        System.out.println("Game Started");
         clientTurn = false;
         inGame = true;
+        isTurn = turn;
+        addBoardButtons();
+    }
+
+    public boolean isGameStarted() {
+        return inGame;
+    }
+
+    public boolean isTurn() {
+        return isTurn;
     }
 
     private void connectToServer() {
 
         // Establish connection thread
+        System.out.println("Connect");
         connection = new ClientConnectionManager(this);
 
         Thread connectionThread = new Thread(connection);
