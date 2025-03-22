@@ -9,15 +9,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.Color;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -128,8 +119,8 @@ public class GameWindow extends JFrame implements ActionListener {
 
         // addBoardButtons();
 
-        b_Connect = new JButton(test);
-        buttonInit(b_Connect, 0.05, 0.8, 0.4, 0.15);
+        b_Connect = new JLabel(test);
+        componentInit(b_Connect, 0.05, 0.8, 0.4, 0.15);
         b_Connect.setVisible(true);
 
         b_Exit = new JButton(test);
@@ -188,16 +179,6 @@ public class GameWindow extends JFrame implements ActionListener {
                 
             }
         });
-                System.out.println("Mouse clicked at: "+e.getPoint());
-
-                if (clicked(getWindowComponent(l_title), e.getPoint())) {
-                    System.out.println("Im a title");
-                }
-                else if (clicked(getWindowComponent(b_Connect), e.getPoint())) {
-                    connectToServer();
-                }
-            }
-         });
 
 
 
