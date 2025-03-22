@@ -9,6 +9,15 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -21,7 +30,7 @@ import javax.swing.WindowConstants;
 
 public class GameWindow extends JFrame implements ActionListener {
 
-    private JButton b_Connect;
+    private JLabel b_Connect;
     private JButton b_Exit;
     private JLabel[][] playerBoardButtons;
     private JLabel[][] opponentBoardButtons;
@@ -64,10 +73,11 @@ public class GameWindow extends JFrame implements ActionListener {
     private boolean clicked(WindowComponent element, Point p) {
 
         // check if within x
-        if (p.getX() >= getWindowXPosition(element.getBoundX()) &&
-                p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
-                p.getY() >= getWindowYPosition(element.getBoundY()) &&
-                p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) {
+        if (p.getX() >= getWindowXPosition(element.getBoundX()) && 
+            p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
+            p.getY() >= getWindowYPosition(element.getBoundY()) && 
+            p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) 
+        {
             return true;
 
         }   return false;
@@ -132,6 +142,15 @@ public class GameWindow extends JFrame implements ActionListener {
         l_title.setVisible(true);
         l_title.setBorder(BorderFactory.createLineBorder(Color.black));
 
+        // Clickables
+        b_Connect = new JLabel("Connect");
+        componentInit(b_Connect, 0.2, 0.7, 0.6, 0.15);
+        b_Connect.setBorder(BorderFactory.createLineBorder(Color.black));
+        b_Connect.setBackground(Color.BLUE);
+        b_Connect.setVisible(true);
+
+
+
         getContentPane().addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
 
@@ -169,6 +188,19 @@ public class GameWindow extends JFrame implements ActionListener {
                 
             }
         });
+                System.out.println("Mouse clicked at: "+e.getPoint());
+
+                if (clicked(getWindowComponent(l_title), e.getPoint())) {
+                    System.out.println("Im a title");
+                }
+                else if (clicked(getWindowComponent(b_Connect), e.getPoint())) {
+                    connectToServer();
+                }
+            }
+         });
+
+
+
 
         clientTurn = false;
         this.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),

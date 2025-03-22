@@ -9,7 +9,10 @@ public class Main {
         // Critical line of code
         // Holds the whole program together
         System.out.println("Heyo!");
-        
+
+        // initialize logger
+        FileLogger.initLogger();
+
         // Create server and check connections on separate thread
         ConnectionManager connection;
         try {
@@ -18,17 +21,22 @@ public class Main {
             connectThread.setDaemon(true);
             connectThread.start();
         } catch (IOException e) {
+            FileLogger.logError(Main.class, "main(String[])", "Could not create server socket");
             System.err.println("Could not create server socket");
             return;
         }
 
         // Allows server to properly close with input
-        Scanner input = new Scanner(System.in);
-        System.out.println("\nType anything to end server");
-        input.nextLine();
+        try (Scanner input = new Scanner(System.in)) {
+            System.out.println("\nType anything to end server");
+            input.nextLine();
+            
+            System.out.println("Exiting");
+        }
 
-        System.out.println("Exiting");
-        input.close();
-        connection.close();
+        // Close connection socket
+        if (connection.close()) {
+            System.out.println("Successfully closed the server!");
+        }
     }
 }
