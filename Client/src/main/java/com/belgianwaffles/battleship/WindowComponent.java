@@ -28,6 +28,26 @@ public class WindowComponent {
 
     }
 
+    public double getBoundX() {
+        return this.x_bound;
+    }
+
+    public double getBoundY() {
+        return this.y_bound;
+    }
+
+    public double getWidth() {
+        return this.width;
+    }
+
+    public double getHeight() {
+        return this.height;
+    }
+
+    public JComponent getComponent() {
+        return this.comp;
+    }
+
     
     
     
