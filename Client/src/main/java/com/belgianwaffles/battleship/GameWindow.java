@@ -168,6 +168,9 @@ public class GameWindow extends JFrame implements ActionListener {
                 if (clicked(getWindowComponent(l_title), e.getPoint())) {
                     System.out.println("Im a title");
                 }
+                else if (clicked(getWindowComponent(b_Connect), e.getPoint())) {
+                    connectToServer();
+                }
             }
          });
 
