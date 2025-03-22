@@ -1,4 +1,4 @@
-package com.belgianwaffles.battleshipserver;
+package com.belgianwaffles.battleship;
 
 import java.io.File;
 import java.io.IOException;
@@ -202,15 +202,11 @@ public final class Packet {
 
     // ----- Constants -----
 
-    // ----- Image ----- Flags -----
-    
     public static final byte PACKET_FLAG_NONE       = (byte)0b00000000;
     public static final byte PACKET_FLAG_SHIP_OK    = (byte)0b10000000;
     public static final byte PACKET_FLAG_SHIP_BROKE = (byte)0b01000000;
     public static final byte PACKET_FLAG_WATER      = (byte)0b00100000;
 
-    // ----- Grid ----- Flags -----
-    
     public static final byte PACKET_TURN_PONE       = 0;
     public static final byte PACKET_TURN_PTWO       = 1;
     
@@ -276,7 +272,6 @@ public final class Packet {
         try {
             this.mBody[index] = data;
         } catch (IndexOutOfBoundsException e) {
-            FileLogger.logError(Packet.class, "setByte(int, byte)",  "Body out of bounds");
             System.err.println("Body out of bounds");
         }
     }
@@ -356,7 +351,6 @@ public final class Packet {
             File file = new File(PACKET_IMAGE_PATH + filename);
             this.mBody = Files.readAllBytes(file.toPath());
         } catch (IOException e) {
-            FileLogger.logError(Packet.class, "serialize(String)", "Could not read from file...");
             return;
         }
 
@@ -436,7 +430,7 @@ public final class Packet {
     
     /**
      * Gets the current players turn type
-     * @return if it is your turn to play
+     * @return which players turn it is. Check with PACKET_TURN_P(ONE/TWO)
      */
     public boolean isTurn() {
         return this.mHeader.isTurn();

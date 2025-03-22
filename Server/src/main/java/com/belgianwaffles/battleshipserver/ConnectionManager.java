@@ -3,9 +3,9 @@ package com.belgianwaffles.battleshipserver;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 
 public final class ConnectionManager implements Runnable {
 
@@ -18,7 +18,7 @@ public final class ConnectionManager implements Runnable {
 
     // ----- Data -----
 
-    private ServerSocket mServer;
+    private final ServerSocket mServer;
     private Socket mClient1, mClient2;
     private boolean mRunningServer;
 
@@ -73,23 +73,51 @@ public final class ConnectionManager implements Runnable {
                 FileLogger.logError(ConnectionManager.class, "run()", 
                 "Something went wrong when connecting clients");
                 System.err.println("Something went wrong when connecting clients");
+                System.err.println("Ignore this message if server is closed");
             }
 
             // Attempt to start game
             if (this.startGame(this.mClient1, this.mClient2)) {
+                // Successfully started game
+                this.mClient1 = null;
+                this.mClient2 = null;
+            }
+            else {
                 // Failed to start game
+                System.out.println("Could not start game");
 
                 // Check if client 2 disconnected
                 if (!this.checkConnection(this.mClient2)) {
+                    System.out.println("Disconnecting client 2");
                     this.mClient2 = null;
                 }
                 // Check if client 1 disconnected
                 // Can move client 2 in always since both will be null anyway
                 if (!this.checkConnection(this.mClient1)) {
+                    System.out.println("Disconnecting client 1");
                     this.mClient1 = this.mClient2;
                 }
             }
         }
+    }
+
+    /**
+     * Attempts to start a game with the 2 given client <code>Socket</code> classes
+     * @param client1 <code>Socket</code> of the first client
+     * @param client2 <code>Socket</code> of the second client
+     * @return <code>boolean</code> returns <code>true</code> when a thread for a new game has been created. 
+     * Returns false if either of the clients have disconnected from the server
+     */
+    private boolean startGame(Socket client1, Socket client2) {
+        // Check state of client 1
+        if (this.checkConnection(client1) && this.checkConnection(client2)) {
+            // Create thread for game to run on
+            GameManager gm = new GameManager(client1, client2);
+            Thread gameThread = new Thread(gm);
+            gameThread.start();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -115,67 +143,80 @@ public final class ConnectionManager implements Runnable {
         // Prepare ping packet
         Packet packet = new Packet();
         packet.serialize();
-
+        
         // Send ping
-        try {
-            var output = new DataOutputStream(client.getOutputStream());
-            output.write(packet.getBuffer());
-
-            // create log of sent ping
-            FileLogger.logPing(packet.toString());
-
-            var input = new DataInputStream(client.getInputStream());
-            
-            // Read ping from client
-            byte[] received = new byte[Packet.HEADER_SIZE];
-            if (input.read(received, 0, received.length) == -1) {
-                System.out.println("Client was disconnected");
-                return false;
-            }            
-
-            // Deserialize the packet
-            packet.deserialize(received);
-            // create log of received ping
-            FileLogger.logPing(packet.toString());
-        }
-        catch (SocketTimeoutException e) {
-            FileLogger.logError(ConnectionManager.class, "ping(Socket)",
-             "Failed to ping socket in time");
-            System.err.println("Failed to ping socket in time");
+        if (!ConnectionManager.sendPacket(client, packet)) {
             return false;
         }
-        catch (IOException e) {
-            FileLogger.logError(ConnectionManager.class, "ping(Socket)",
-             "Failed to ping client");
-            System.err.println("Failed to ping client");
+        // Create log of sent ping
+        FileLogger.logPing(packet.toString());
+        
+        // Receive ping
+        packet = ConnectionManager.receivePacket(client);
+        if (packet == null) {
             return false;
         }
-        catch (NullPointerException e) {
-            FileLogger.logError(ConnectionManager.class, "ping(Socket)",
-             "No client");
-            System.err.println("No client");
+        
+        // Check packet is ping
+        if (packet.getType() != Packet.PACKET_TYPE_PING) {
+            FileLogger.logError(ConnectionManager.class, "ping(Socket)", "Received invalid packet type");
             return false;
         }
+
+        // Create log of received ping
+        FileLogger.logPing(packet.toString());
+
         return true;
     }
 
     /**
-     * Attempts to start a game with the 2 given client <code>Socket</code> classes
-     * @param client1 <code>Socket</code> of the first client
-     * @param client2 <code>Socket</code> of the second client
-     * @return <code>boolean</code> returns <code>true</code> when a thread for a new game has been created. 
-     * Returns false if either of the clients have disconnected from the server
+     * Sends a packet to the specified client
+     * @param client the client to send the packet to
+     * @param packet the packet data to send
      */
-    private boolean startGame(Socket client1, Socket client2) {
-        // Check state of client 1
-        if (this.checkConnection(client1) && this.checkConnection(client2)) {
-            // Create thread for game to run on
-            GameManager gm = new GameManager(client1, client2);
-            Thread gameThread = new Thread(gm);
-            gameThread.start();
+    public static boolean sendPacket(Socket client, Packet packet) {
+        try {
+            var output = new DataOutputStream(client.getOutputStream());
+            output.write(packet.getBuffer());
             return true;
+        } catch (IOException ex) {
+            FileLogger.logError(ConnectionManager.class, "sendPacket(Packet, Socket)", "Failed to send packet");
+            System.err.println("Failed to send packet");
+            return false;
         }
-        return false;
+    }
+
+    /**
+     * Awaits and receives a packet from the server
+     * @return a serialized packet with data from the server
+     */
+    public static Packet receivePacket(Socket client) {
+        try {
+            // Get socket input
+            InputStream input = new DataInputStream(client.getInputStream());
+    
+            // Read the head from the server
+            Packet packet = new Packet();
+            byte[] head = input.readNBytes(Packet.HEADER_SIZE);
+            packet.deserialize(head);
+    
+            // Get the packet body
+            byte[] body = input.readNBytes(packet.getLength() + Packet.PACKET_TAIL_SIZE);
+            
+            // Add all items to packet
+            byte[] bytes = new byte[head.length + body.length];
+            System.arraycopy(head, 0, bytes, 0, head.length);
+            System.arraycopy(body, 0, bytes, head.length, body.length);
+
+            // Pack into packet
+            packet.deserialize(bytes);
+            FileLogger.logMessage(packet.toString());
+
+            // Return the packet
+            return packet;
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     public static boolean sendPacket(Socket client, Packet packet) {

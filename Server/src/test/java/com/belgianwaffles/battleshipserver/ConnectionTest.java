@@ -10,6 +10,7 @@ public class ConnectionTest {
 
     /**
      * Tests the creation and closing of the sockets for the server
+     * SVR-CON-001
      */
     @Test
     public void ServerCreationAndDestruction() {
@@ -23,6 +24,7 @@ public class ConnectionTest {
     }
     /**
      * Allows for 2 clients to connect to the server
+     * SVR-CON-002
      */
     @Test
     public void ConnectTwoClients() {

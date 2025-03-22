@@ -8,6 +8,7 @@ public class GameTest {
     /**
      * This will test that the game can be created, however it
      * will close after pinging due to no socket connections
+     * SVR-GAME-001
      */
     @Test
     public void CreateGame() {
@@ -20,6 +21,7 @@ public class GameTest {
     /**
      * Tests that all games can be ended by calling end all games method.
      * Will print that several errors occured, however this is due to null clients
+     * SVR-GAME-002
      */
     @Test
     public void EndAllGames() {

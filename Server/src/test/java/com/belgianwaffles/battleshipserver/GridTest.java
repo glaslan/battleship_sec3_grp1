@@ -9,16 +9,17 @@ public class GridTest {
     /**
      * Tests that a blank grid is created with cells having no values.
      * This will be used by the server to start a new game
+     * SVR-GRID-001
      */
     @Test
     public void CreateGridWithDefault() {
         // Arrange
         int expected = 0;
-
+        
         // Act
         Grid grid = new Grid();
         var cells = grid.getCells();
-
+        
         // Assert
         for (Grid.GridCell[] subcells : cells) {
             for (Grid.GridCell cell : subcells) {
@@ -28,6 +29,7 @@ public class GridTest {
     }
     /**
      * Test that a grid can be made from a given byte array containing cell information
+     * SVR-GRID-002
      */
     @Test
     public void CreateGridWithBytes() {
@@ -37,7 +39,7 @@ public class GridTest {
         for (int i = 0; i < bytes.length; i++) {
             bytes[i] = expected;
         }
-
+        
         // Act
         Grid grid = new Grid(bytes);
         var cells = grid.getCells();
@@ -51,6 +53,7 @@ public class GridTest {
     }
     /**
      * Tests that a grid can be made from another grids cell arrays
+     * SVR-GRID-003
      */
     @Test
     public void CreateGridWithCells() {
@@ -63,13 +66,13 @@ public class GridTest {
                 cell.setShipP2(true);
             }
         }
-
+        
         // Act
         Grid grid = new Grid(creationCells);
         var cells = grid.getCells();
         
         // Assert
-
+        
         // Each cell is asserted for all flags
         for (Grid.GridCell[] subcells : cells) {
             for (Grid.GridCell cell : subcells) {

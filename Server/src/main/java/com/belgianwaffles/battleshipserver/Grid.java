@@ -271,6 +271,18 @@ public final class Grid {
     }
 
     /**
+     * Allows for the combination of 2 grids into 1
+     * @return combined grid
+     */
+    public void combine(Grid g1, Grid g2) {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j] = new GridCell((byte)(g1.mCells[i][j].getCell() | g2.mCells[i][j].getCell()));
+            }
+        }
+    }
+
+    /**
      * Copies cell data so it can be changed outside of class without affecting actual grid
      */
     private GridCell[][] copyCells() {
@@ -297,6 +309,33 @@ public final class Grid {
             }
         }
         return this;
+    }
+    /**
+     * Allows for comparing of 2 grids to see how many differences there are
+     * @return the number of differences in the grid
+     */
+    public int checkDifferences(Grid other) {
+        int diff = 0;
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                if (this.mCells[i][j] != other.mCells[i][j]) {
+                    diff++;
+                }
+            }
+        }
+        return diff;
+    }
+
+    /**
+     * Removes all sharks from the grid
+     */
+    public void removeSharks() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].setSharkP1(false);
+                this.mCells[i][j].setSharkP2(false);
+            }
+        }
     }
     
     public Grid translateP2toP1() {

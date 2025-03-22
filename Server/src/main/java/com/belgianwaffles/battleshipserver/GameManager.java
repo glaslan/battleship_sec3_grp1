@@ -3,20 +3,28 @@ package com.belgianwaffles.battleshipserver;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class GameManager implements Runnable {
     
     // ----- Constants -----
     
-    private static int SLEEP_TIME = 5000;
+    private static final int SLEEP_TIME = 5;
 
 
 
     // ----- Data -----
     
-    private Socket mClient1, mClient2;
-    private boolean mGameOver;
+    private final Socket mClient1, mClient2;
+    private final Grid mGrid;
 
+    // For easy swapping
+    private Socket mCurrentSocket;
+
+    // Ending games
+    private boolean mGameOver;
     private static boolean sServerClosed;
     static {
         sServerClosed = false;
@@ -30,6 +38,8 @@ public class GameManager implements Runnable {
         this.mClient1 = s1;
         this.mClient2 = s2;
         this.mGameOver = false;
+        this.mCurrentSocket = this.mClient1;
+        this.mGrid = new Grid();
     }
     
     
@@ -37,32 +47,55 @@ public class GameManager implements Runnable {
     // ----- Threading -----
     
     @Override
+    @SuppressWarnings("ConvertToTryWithResources")
     public void run() {
-        System.out.println("Starting new game");
         // Setup game state
         this.startGame();
-        
+
+        // Check game isnt already over
+        if (this.mGameOver) {
+            this.endGame();
+            System.out.println("Closed thread id=" + Thread.currentThread().threadId());
+        }
+
         // Create thread for pinging clients
         Runnable pingThread = () -> {
-            while (!this.mGameOver && !sServerClosed) {
-                try {
-                    Thread.sleep(SLEEP_TIME);
-                    GameManager.this.pingClients();
-                } catch (InterruptedException e) {
-                    FileLogger.logError(GameManager.class, "run()", 
-            "Thread interrupted");
-                    System.err.println("Thread interrupted");
-                }
+            if (!this.mGameOver && !sServerClosed) {
+                GameManager.this.pingClients();
             }
         };
-        Thread t = new Thread(pingThread);
-        t.setDaemon(true);
-        t.start();
-
+        // Ping every SLEEP_TIME seconds
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.scheduleAtFixedRate(pingThread, SLEEP_TIME, SLEEP_TIME, TimeUnit.SECONDS);
+        
         // Main loop
-        while (this.play()) {}
+        while (this.play()) {
+            // Receive packet from player
+            Packet received = ConnectionManager.receivePacket(this.mCurrentSocket);
+            if (received == null) {
+                continue;
+            }
+
+            // Check packet data
+            if (received.getType() == Packet.PACKET_TYPE_GRID) {
+                Grid grid = received.getGrid();
+                if (this.mGrid.checkDifferences(grid) != 1) {
+                    System.err.println("Too many grid changes received");
+                    continue;
+                }
+
+                // Update grid
+                this.mGrid.combine(this.mGrid, grid);
+            }
+
+            // Do some stuff with sendsing
+            
+            // Swap players
+            this.swapPlayers();
+        }
         
         // Actions for game end
+        executor.close();
         this.endGame();
         System.out.println("Closed thread id=" + Thread.currentThread().threadId());
     }
@@ -170,49 +203,32 @@ public class GameManager implements Runnable {
     
     private void startGame() {
         System.out.println("Starting game on thread id=" + Thread.currentThread().threadId());
+
         // Setup game states
         Packet packet = new Packet();
-        Grid grid = new Grid();
-        packet.serialize(grid);
-        // add/replace with flag: setupShips???
-        packet.addTurn(Packet.PACKET_TURN_PONE);
-        // temp fix to flag which user is which
-        packet.addUser((short) 1);
-        sendPacket(mClient1, packet);
-        // response from client
-        // does server need to maintain a copy of boards?
-        // also i think the clients need to know which is p1 and which is p2
-        packet = receivePacket(mClient1);
-        packet.addUser((short) 2);
-        sendPacket(mClient2, packet);
-        packet = receivePacket(mClient2);
+        packet.serialize(this.mGrid);
 
-
-        /* 
-        // enter main game loop?
-        // my thoughts for the main loop functionality
-
-        // this should not pass by reference because of how get grid returns? java isnt a real language
-        packet.serialize(generateSugarSharks(packet.getGrid()));
-        // p1 turn
-        packet.addTurn(Packet.PACKET_TURN_PONE);
-        packet.addUser((short) 1);
-        sendPacket(mClient1, packet);
-        packet = receivePacket(mClient1);
-        if (getShipsRemaining(packet.getGrid(), 2) == 0) {
-            //p1 win
-        }
-        //p2 turn
-        packet.addTurn(Packet.PACKET_TURN_PTWO);
-        packet.addUser((short) 2);
-        sendPacket(mClient2, packet);
-        packet = receivePacket(mClient2);
-        if (getShipsRemaining(packet.getGrid(), 1) == 0) {
-            //p2 win
+        // Send packets, end game if fail
+        if (!ConnectionManager.sendPacket(this.mClient1, packet)) {
+            this.mGameOver = true;
         }
 
-        */
-        
+        if (!ConnectionManager.sendPacket(this.mClient2, packet)) {
+            this.mGameOver = true;
+        }
+
+        // Receive packets with grid data
+        Packet p1 = ConnectionManager.receivePacket(this.mClient1);
+        Packet p2 = ConnectionManager.receivePacket(this.mClient2);
+        try {
+            // Combine grids into one
+            Grid p1Grid = p1.getGrid();
+            Grid p2Grid = p2.getGrid();
+            this.mGrid.combine(p1Grid, p2Grid);
+        } catch (IllegalStateException e) {
+            System.err.println("Could not parse grid from client");
+            this.mGameOver = true;
+        }
     }
     
     private void endGame() {
@@ -221,21 +237,15 @@ public class GameManager implements Runnable {
         // Close client1
         try {
             this.mClient1.close();
-        } catch (IOException e) {
-            System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
-        }
-        catch (NullPointerException e) {
+        } catch (IOException | NullPointerException e) {
+            FileLogger.logError(GameManager.class, "endGame()", 
+            "Failed to close clients on thread id=" + Thread.currentThread().threadId());
             System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
         }
         // Close client 2
         try {
             this.mClient2.close();
-        } catch (IOException e) {
-            FileLogger.logError(GameManager.class, "endGame()", 
-            "Failed to close clients on thread id=" + Thread.currentThread().threadId());
-            System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
-        }
-        catch (NullPointerException e) {
+        } catch (IOException | NullPointerException e) {
             FileLogger.logError(GameManager.class, "endGame()", 
             "Failed to close clients on thread id=" + Thread.currentThread().threadId());
             System.err.println("Failed to close clients on thread id=" + Thread.currentThread().threadId());
@@ -267,4 +277,16 @@ public class GameManager implements Runnable {
     
 
     // ----- Update -----
+
+    /**
+     * Swaps which player is currently being checked for packet receiving
+     */
+    private void swapPlayers() {
+        if (this.mCurrentSocket.equals(this.mClient1)) {
+            this.mCurrentSocket = this.mClient2;
+        }
+        else {
+            this.mCurrentSocket = this.mClient1;
+        }
+    }
 }
