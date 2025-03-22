@@ -6,7 +6,6 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        
         // Critical line of code
         // Holds the whole program together
         System.out.println("Heyo!");

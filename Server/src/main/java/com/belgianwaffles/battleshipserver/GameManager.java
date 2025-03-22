@@ -101,8 +101,41 @@ public class GameManager implements Runnable {
 
     private Grid generateSugarSharks(Grid grid) {
         // odds of sugar shark = 1/chance
-        int chance = 10;
+        final int amountOfSharks = 3;
+        int numberOfSharks = amountOfSharks;
+        //int chance = 10;
         Random rng = new Random(System.currentTimeMillis());
+
+        for (int i = 0; i < Grid.GRID_SIZE; i++) {
+            for (int j = 0; j < Grid.GRID_SIZE; j++) {
+                // clear current sharks
+                grid.getCells()[i][j].setSharkP1(false);
+                grid.getCells()[i][j].setSharkP2(false);
+            }
+        }
+        // max attempts to create 3 sharks
+        int attempts = 40;
+        // P1 sharks
+        while (numberOfSharks > 0 && attempts > 0) {
+            if (!grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShipP2() 
+            && !grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShotP1()) {
+                grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].setSharkP1(true);
+                numberOfSharks--;
+            }
+            attempts--;
+        }
+
+        numberOfSharks = amountOfSharks;
+        attempts = 40;
+        while (numberOfSharks > 0 && attempts > 0) {
+            if (!grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShipP1() 
+            && !grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShotP2()) {
+                grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].setSharkP2(true);
+                numberOfSharks--;
+            }
+            attempts--;
+        }
+        /*
         for (int i = 0; i < Grid.GRID_SIZE; i++) {
             for (int j = 0; j < Grid.GRID_SIZE; j++) {
                 // clear current sharks
@@ -119,6 +152,7 @@ public class GameManager implements Runnable {
                 }
             }
         }
+        */
         return grid;
     }
 

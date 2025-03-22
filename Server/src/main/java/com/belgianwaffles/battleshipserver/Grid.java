@@ -166,6 +166,37 @@ public final class Grid {
         public boolean hasShotP2() {
             return this.getBit(MASK_SHOT_2);
         }
+
+        public GridCell translateP1toP2() {
+            if (this.hasSharkP1()) {
+                this.setSharkP1(false);
+                this.setSharkP2(true);
+            }
+            if (this.hasShipP1()) {
+                this.setShipP1(false);
+                this.setShipP2(true);
+            }
+            if (this.hasShotP1()) {
+                this.setShotP1(false);
+                this.setShotP2(true);
+            }
+            return this;
+        }
+        public GridCell translateP2toP1() {
+            if (this.hasSharkP2()) {
+                this.setSharkP2(false);
+                this.setSharkP1(true);
+            }
+            if (this.hasShipP2()) {
+                this.setShipP2(false);
+                this.setShipP1(true);
+            }
+            if (this.hasShotP2()) {
+                this.setShotP2(false);
+                this.setShotP1(true);
+            }
+            return this;
+        }
         
         @Override
         public String toString() {
@@ -258,7 +289,25 @@ public final class Grid {
     public GridCell[][] getCells() {
         return this.copyCells();
     }
+
+    public Grid translateP1toP2() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].translateP1toP2();
+            }
+        }
+        return this;
+    }
     
+    public Grid translateP2toP1() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].translateP2toP1();
+            }
+        }
+        return this;
+    }
+
     @Override
     public String toString() {
         String str = "";
