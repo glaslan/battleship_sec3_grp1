@@ -184,8 +184,31 @@ public final class Grid {
 
             return str;
         }
-        
     }
+
+    private final class Coordinate {
+
+        // ----- Constants -----
+        
+        // ----- Data -----
+
+        int mX, mY;
+        
+        public Coordinate(int x, int y) {
+            this.mX = x;
+            this.mY = y;
+        }
+
+        public int x() {
+            return this.mX;
+        }
+
+        public int y() {
+            return this.mY;
+        }
+    }
+    
+    
 
     // ----- Constants -----
 
@@ -196,6 +219,7 @@ public final class Grid {
     // ----- Data -----
 
     private GridCell[][] mCells;
+    private Coordinate mCoord1, mCoord2;
 
 
 
@@ -238,6 +262,212 @@ public final class Grid {
             }
         }
     }
+
+
+
+    // ----- Setters -----
+
+    /**
+     * Ensures that a coordinate is inbounds in the grid
+     * @param x x coordinate of point
+     * @param y y coordinate of point
+     * @return true is inbounds, false if out of bounds
+     */
+    private boolean inBounds(int x, int y) {
+        // Check x out of bounds
+        if (x < 0 || x > GRID_SIZE - 1) {
+            return false;
+        }
+        // Check y out of bounds
+        if (y < 0 || y > GRID_SIZE - 1) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks if any ships are too close to the selected area
+     * @param isHorizontal if the ship being placed is horizontal
+     * @return true if there is a ship too close, false if no ships
+     */
+    private boolean checkForShips(boolean isHorizontal) {
+        if (isHorizontal) {
+            // Loop checks
+            for (int y = -1; y <= 1; y++) {
+                if (!this.inBounds(this.mCoord1.x(), this.mCoord1.y() + y)) {
+                    continue;
+                }
+
+                // Loop through x values
+                for (int x = this.mCoord1.x(); x < this.mCoord2.x(); x++) {
+                    // Check out of bounds
+                    if (!this.inBounds(x, y)) {
+                        continue;
+                    }
+
+                    // Check for ship
+                    if (this.mCells[x][y].hasSharkP1()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        else {
+            // Loop checks
+            for (int x = -1; x <= 1; x++) {
+                if (!this.inBounds(this.mCoord1.x() + x, this.mCoord1.y())) {
+                    continue;
+                }
+    
+                // Loop through y values
+                for (int y = this.mCoord1.y(); y < this.mCoord2.y(); y++) {
+                    // Check out of bounds
+                    if (!this.inBounds(x, y)) {
+                        continue;
+                    }
+    
+                    // Check for ship
+                    if (this.mCells[x][y].hasSharkP1()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Places horizontal ships, sets up coordinates, and returns length
+     * @param x1 x coordinate of first position
+     * @param y1 y coordinate of first position
+     * @param x2 x coordinate of second position
+     * @param y2 y coordinate of second position
+     * @return the length of the ship
+     */
+    private int placeShipsHorizontal(int x1, int y1, int x2, int y2) {
+        // Check which is more left
+        if (x1 < x2) {
+            this.mCoord1 = new Coordinate(x1, y1);
+            this.mCoord2 = new Coordinate(x2, y2);
+        }
+        else {
+            this.mCoord1 = new Coordinate(x2, y2);
+            this.mCoord2 = new Coordinate(x1, y1);
+        }
+
+        // Place ships
+        for (int i = this.mCoord1.x(); i <= this.mCoord2.x(); i++) {
+            this.mCells[i][this.mCoord1.y()].setShipP1(true);
+        }
+        return ((this.mCoord2.x() - this.mCoord1.x()) + 1);
+    }
+
+    /**
+     * Places vertical ships, sets up coordinates, and returns length
+     * @param x1 x coordinate of first position
+     * @param y1 y coordinate of first position
+     * @param x2 x coordinate of second position
+     * @param y2 y coordinate of second position
+     * @return the length of the ship
+     */
+    private int placeShipsVertical(int x1, int y1, int x2, int y2) {
+        // Check which is more left
+        if (y1 < y2) {
+            this.mCoord1 = new Coordinate(x1, y1);
+            this.mCoord2 = new Coordinate(x2, y2);
+        }
+        else {
+            this.mCoord1 = new Coordinate(x2, y2);
+            this.mCoord2 = new Coordinate(x1, y1);
+        }
+
+        // Place ships
+        for (int i = this.mCoord1.y(); i <= this.mCoord2.y(); i++) {
+            this.mCells[this.mCoord1.x()][i].setShipP1(true);
+        }
+        return ((this.mCoord2.y() - this.mCoord1.y()) + 1);
+    }
+
+    /**
+     * Allows for the placing of ships. This function knows the rules of the game. Its very big brain (allegedly)
+     * @param x1 x coordinate of first position
+     * @param y1 y coordinate of first position
+     * @param x2 x coordinate of second position
+     * @param y2 y coordinate of second position
+     * @return the length of the placed ship. Returns -1 on any failure
+     */
+    public int placeShip(int x1, int y1, int x2, int y2) {
+        // Check inbounds
+        if (!this.inBounds(x1, y1) || !this.inBounds(x2, y2)) {
+            return -1;
+        }
+        
+        // Holds if ship is horizontal or vertical
+        boolean horizontal = false, vertical = false;
+
+        // Checks for lines
+        if (x1 == x2) { vertical = true; }
+        if (y1 == y2) {horizontal = true;}
+        
+        // Ship is not in same column or row
+        if (!horizontal && !vertical) {
+            return -1;
+        }
+        
+        // Determine if any ships are too close
+        if (this.checkForShips(horizontal)) {
+            return -1;
+        }
+        
+        // Ships can be placed
+        // For horizontal ships
+        if (horizontal) {
+            return this.placeShipsHorizontal(x1, y1, x2, y2);
+        }
+        // Checks verticallity
+        else {
+            return this.placeShipsVertical(x1, y1, x2, y2);
+        }
+    }
+
+    /**
+     * Undo's the most recent ship placement
+     */
+    public void undoShip() {
+        // Check coordinates are real
+        if (this.mCoord1 == null || this.mCoord2 == null) {
+            return;
+        }
+        
+        // Removes the ships
+        // Checks for lines
+        boolean horizontal = false, vertical = false;
+        if (this.mCoord1.x() == this.mCoord2.x()) { vertical = true; }
+        if (this.mCoord1.y() == this.mCoord2.y()) {horizontal = true;}
+
+        // Horizontal ship replacements
+        if (horizontal) {
+            for (int i = this.mCoord1.x(); i < this.mCoord2.x(); i++) {
+                this.mCells[i][this.mCoord1.y()].setShipP1(false);
+            }
+        }
+        // Vertical ship replacements
+        else if (vertical) {
+            for (int i = this.mCoord1.y(); i < this.mCoord2.y(); i++) {
+                this.mCells[this.mCoord1.x()][i].setShipP1(false);
+            }
+        }
+        else {
+            System.err.println("Ruh roh raggy");
+        }
+        // Coords set to null since ships are removed
+        this.mCoord1 = null;
+        this.mCoord2 = null;
+    }
+    
+    
+
+    // ----- Getters -----
 
     /**
      * Copies cell data so it can be changed outside of class without affecting actual grid
