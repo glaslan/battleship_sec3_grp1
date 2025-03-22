@@ -101,6 +101,11 @@ public class GameManager implements Runnable {
                 
                 // Swap players
                 this.swapPlayers();
+
+                // Checks if there are ships remaining
+                if (this.getShipsRemaining() <= 0) {
+                    this.mGameOver = true;
+                }
             }
             
             // Actions for game end
@@ -113,10 +118,11 @@ public class GameManager implements Runnable {
         
         // ----- Game ----- Methods -----
             
-        private int getShipsRemaining(Grid grid, int player) {
-            Grid.GridCell[][] matrix = grid.getCells();
+        private int getShipsRemaining() {
+            Grid.GridCell[][] matrix = this.mGrid.getCells();
             int shipsLeft = 0;
-            if (player == 1){
+            // Check player 1
+            if (this.mCurrentPlayerIsOne){
                 for (int i = 0; i < Grid.GRID_SIZE; i++) {
                     for (int j = 0; j < Grid.GRID_SIZE; j++) {
                         if (matrix[i][j].hasShipP1() && !(matrix[i][j].hasShotP2())) {
@@ -125,7 +131,8 @@ public class GameManager implements Runnable {
                     }
                 }
             }
-            else if (player == 2){
+            // Check player 2
+            else {
                 for (int i = 0; i < Grid.GRID_SIZE; i++) {
                     for (int j = 0; j < Grid.GRID_SIZE; j++) {
                         if (matrix[i][j].hasShipP2() && !(matrix[i][j].hasShotP1())) {
@@ -134,16 +141,12 @@ public class GameManager implements Runnable {
                     }
                 }
             } 
-            else {
-                System.out.println("Invalid usage of this function");
-                return -1;
-            }
             return shipsLeft;
         }
     
         private Grid generateSugarSharks(Grid grid) {
             // odds of sugar shark = 1/chance
-            final int amountOfSharks = 3;
+            final int amountOfSharks = 3, maxattepts = 50;
             int numberOfSharks = amountOfSharks;
             //int chance = 10;
             Random rng = new Random(System.currentTimeMillis());
@@ -156,24 +159,26 @@ public class GameManager implements Runnable {
                 }
             }
             // max attempts to create 3 sharks
-            int attempts = 40;
+            int attempts = maxattepts;
             // P1 sharks
             while (numberOfSharks > 0 && attempts > 0) {
                 if (!grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShipP2() 
                 && !grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShotP1()) {
                     grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].setSharkP1(true);
                     numberOfSharks--;
+                    attempts = maxattepts;
                 }
                 attempts--;
             }
     
             numberOfSharks = amountOfSharks;
-            attempts = 40;
+            attempts = maxattepts;
             while (numberOfSharks > 0 && attempts > 0) {
                 if (!grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShipP1() 
                 && !grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShotP2()) {
                     grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].setSharkP2(true);
                     numberOfSharks--;
+                    attempts = maxattepts;
                 }
                 attempts--;
             }
@@ -205,6 +210,7 @@ public class GameManager implements Runnable {
                 // Combine grids into one
                 Grid p1Grid = p1.getGrid();
                 Grid p2Grid = p2.getGrid();
+                p2Grid.translateP1toP2();
                 this.mGrid.combine(p1Grid, p2Grid);
             } catch (IllegalStateException e) {
                 System.err.println("Could not parse grid from client");
@@ -213,6 +219,10 @@ public class GameManager implements Runnable {
         }
         
         private void endGame() {
+            // Send winning data
+            
+
+            // Close clients
             System.out.println("Ending game on thread id=" + Thread.currentThread().threadId());
     
             // Close client1
@@ -263,7 +273,7 @@ public class GameManager implements Runnable {
          * Swaps which player is currently being checked for packet receiving
          */
         private void swapPlayers() {
-            if (this.mCurrentSocket.equals(this.mClient1)) {
+            if (this.mCurrentPlayerIsOne) {
                 this.mCurrentSocket = this.mClient2;
                 this.mCurrentPlayerIsOne = false;
         }

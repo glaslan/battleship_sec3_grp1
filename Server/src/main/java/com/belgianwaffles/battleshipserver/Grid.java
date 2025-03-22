@@ -272,7 +272,6 @@ public final class Grid {
 
     /**
      * Allows for the combination of 2 grids into 1
-     * @return combined grid
      */
     public void combine(Grid g1, Grid g2) {
         for (int i = 0; i < GRID_SIZE; i++) {

@@ -84,7 +84,7 @@ public class PacketTest {
         
         // Act
         packet.addFlag(Packet.PACKET_FLAG_NONE);
-        packet.addTurn(Packet.PACKET_TURN_PONE);
+        packet.addTurn(Packet.PACKET_TURN_TRUE);
         packet.addUser((short)expectedUser);
         packet.serialize();
         
@@ -189,5 +189,23 @@ public class PacketTest {
         } catch (IllegalStateException e) {
             assertTrue(true);
         }
+    }
+    /**
+     * Tests that a packet of type flags can be created with and without isWinner flag
+     * SVR-PKT-008
+     */
+    @Test
+    public void PacketSerializeFlagsPacket() {
+        // Arrange
+        Packet winner = new Packet();
+        Packet loser = new Packet();
+        
+        // Act
+        winner.serialize(true);
+        loser.serialize(false);
+        
+        // Assert
+        assertTrue(winner.hasFlag(Packet.PACKET_FLAG_WINNER));
+        assertFalse(loser.hasFlag(Packet.PACKET_FLAG_WINNER));
     }
 }

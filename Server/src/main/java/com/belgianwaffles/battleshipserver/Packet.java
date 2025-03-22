@@ -211,13 +211,19 @@ public final class Packet {
 
     // ----- Grid ----- Flags -----
     
-    public static final byte PACKET_TURN_PONE       = 0;
-    public static final byte PACKET_TURN_PTWO       = 1;
+    public static final byte PACKET_TURN_TRUE       = 1;
+
+    // ----- Flags ----- Flags -----
+
+    public static final byte PACKET_FLAG_WINNER     = (byte)0b10000000;
+
+    // ----- Other ----- Flags -----
     
     public static final byte PACKET_TYPE_NONE       = 0;
     public static final byte PACKET_TYPE_PING       = 1;
     public static final byte PACKET_TYPE_GRID       = 2;
     public static final byte PACKET_TYPE_IMAGE      = 3;
+    public static final byte PACKET_TYPE_FLAGS      = 4;
     public static final int  PACKET_TAIL_SIZE       = 1;
 
     private static final String PACKET_IMAGE_PATH   = "../Assets/";
@@ -315,6 +321,23 @@ public final class Packet {
     public void serialize() {
         // Setup header
         this.mHeader.addType(PACKET_TYPE_PING);
+        
+        // Setup body, empty but not null
+        this.mBody = new byte[1];
+        this.setByte(0, (byte)0);
+        
+        // Pack data to packet
+        this.pack();
+    }
+
+    /**
+     * Serialized a game over packet
+     * @param isWinner true if this player is the winner, false if they are not
+     */
+    public void serialize(boolean isWinner) {
+        // Setup header
+        this.mHeader.addType(PACKET_TYPE_FLAGS);
+        if (isWinner) { this.addFlag(PACKET_FLAG_WINNER); }
         
         // Setup body, empty but not null
         this.mBody = new byte[1];
