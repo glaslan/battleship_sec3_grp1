@@ -25,7 +25,7 @@ public class WindowComponent {
     public void resize(int screen_width, int screen_height) {
 
         this.comp.setBounds((int)(this.x_bound * screen_width), (int)(this.y_bound * screen_height), (int)(this.width * screen_width), (int)(this.height * screen_height));
-
+        this.comp.revalidate();
     }
 
     public double getBoundX() {
