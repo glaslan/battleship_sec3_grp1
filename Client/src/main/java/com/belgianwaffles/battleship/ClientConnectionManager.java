@@ -56,7 +56,7 @@ public class ClientConnectionManager implements Runnable{
         System.out.println("grid");
 
         if (!game.isGameStarted()) {
-            game.startGame();
+            game.startGame(true);
         }
     }
     
