@@ -17,7 +17,7 @@ public class GameManager implements Runnable {
     
     // ----- Constants -----
     
-    private static final int SLEEP_TIME = 5;
+    private static final int SLEEP_TIME = ConnectionManager.DEFAULT_TIMEOUT / 2;
 
 
 
@@ -79,21 +79,15 @@ public class GameManager implements Runnable {
         };
         // Ping every SLEEP_TIME seconds
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.scheduleAtFixedRate(pingThread, SLEEP_TIME, SLEEP_TIME, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(pingThread, 0, SLEEP_TIME, TimeUnit.MILLISECONDS);
 
         // Setup game state
         this.startGame();
 
-        // Check game isnt already over
-        if (this.mGameOver) {
-            this.endGame();
-            System.out.println("Closed thread id=" + Thread.currentThread().threadId());
-        }
-        
         // Main loop
         while (this.play()) {
             // Receive packet from player
-            Packet received = this.findPacket(this.mCurrentSocket, Packet.PACKET_TYPE_GRID, true);
+            Packet received = this.findPacket(this.mCurrentSocket, Packet.PACKET_TYPE_GRID);
             if (received == null) {
                 continue;
             }
@@ -302,6 +296,24 @@ public class GameManager implements Runnable {
     private void startGame() {
         System.out.println("Starting game on thread id=" + Thread.currentThread().threadId());
 
+        // Create threads for receiving from each client
+        Runnable receiveP1 = () -> {
+            while (this.play()) {
+                this.receivePacket(this.mClient1);
+            }
+        };
+        Thread receiveThreadP1 = new Thread(receiveP1);
+        receiveThreadP1.setDaemon(true);
+        receiveThreadP1.start();
+        Runnable receiveP2 = () -> {
+            while (this.play()) {
+                this.receivePacket(this.mClient2);
+            }
+        };
+        Thread receiveThreadP2 = new Thread(receiveP2);
+        receiveThreadP2.setDaemon(true);
+        receiveThreadP2.start();
+
         // Setup game states
         Packet packet = new Packet();
         packet.serialize(this.mGrid);
@@ -316,14 +328,9 @@ public class GameManager implements Runnable {
         }
 
         // Receive packets with grid data
-        Packet p1 = this.findPacket(this.mClient1, Packet.PACKET_TYPE_GRID, false);
-        while (p1 == null && this.play()) {
-            p1 = this.findPacket(this.mClient1, Packet.PACKET_TYPE_GRID, false);
-        }
-        Packet p2 = this.findPacket(this.mClient2, Packet.PACKET_TYPE_GRID, false);
-        while (p2 == null && this.play()) {
-            p2 = this.findPacket(this.mClient2, Packet.PACKET_TYPE_GRID, false);
-        }
+        Packet p1 = null, p2 = null;
+        while (p1 == null && this.play()) { p1 = this.findPacket(this.mClient1, Packet.PACKET_TYPE_GRID); }
+        while (p2 == null && this.play()) { p2 = this.findPacket(this.mClient2, Packet.PACKET_TYPE_GRID); }
 
         // Check game over
         if (!this.play()) {
@@ -403,71 +410,112 @@ public class GameManager implements Runnable {
     }
 
     /**
-     * Allows for reading and removal of items from list
-     * @param client the client to check packets for
-     * @param type the desired type of packet
-     * @param isBlocking if this should hold the thread until it finds the desired packet
-     * @return the desired packet. Null otherwise
-     */
-    private synchronized Packet findPacket(Socket client, int type, boolean isBlocking) {
-        // Check packet list
-        do {
-            for (int i = 0; i < this.mPackets.size(); i++) {
-                PacketMap pm = this.mPackets.get(i);
-                if (pm.client == client && pm.packet.getType() == type) {
-                    Packet packet = this.mPackets.get(i).packet;
-                    this.mPackets.remove(i);
-                    return packet;
-                }
-            }
-            // Allows for this method to wait until it receives desired packet
-        } while (isBlocking);
-
-        // No packet found for that client
-        return null;
-    }
-    
-    /**
      * Pings clients and checks packet type. If not a ping, adds to packet list
      * @param client the client to ping
      */
     private boolean ping(Socket client) {
-
+        
         // ----- Send ----- Ping -----
-
+        
         // Prepare ping packet
         Packet packet = new Packet();
         packet.serialize();
         
         // Send ping
         if (!ConnectionManager.sendPacket(client, packet)) {
-            System.err.println("Failure to send");
             return false;
         }
+        
         // Create log of sent ping
         FileLogger.logPing(packet.toString());
-
-
-
+        
+        
+        
         // ----- Receive ----- Ping -----
 
         do {
-            packet = ConnectionManager.receivePacket(client);
-            if (packet == null) {
+            // Try to find a ping packet
+            packet = this.findPacket(client, Packet.PACKET_TYPE_PING);
+            
+            // Check if packet is received
+            if (packet != null) {
+                break;
+            }
+
+            // Try to find a null packet
+            packet = this.findPacket(client, Packet.PACKET_TYPE_NONE);
+            if (packet != null) {
+                System.err.println("Client disconnected");
+                FileLogger.logMessage("Client disconnected");
                 return false;
             }
-
-            // Check packet is ping
-            if (packet.getType() != Packet.PACKET_TYPE_PING) {
-                this.mPackets.add(new PacketMap(client, packet));
-                continue;
-            }
-        } while (packet.getType() != Packet.PACKET_TYPE_PING);
-
+        } while (packet == null);
+        
         // Create log of received ping
         FileLogger.logPing(packet.toString());
-
+        
         return true;
+    }
+    
+    /**
+     * Receive packets from given client
+     * @param client the client to receive packets from
+     */
+    private void receivePacket(Socket client) {
+        // Receive and add packet to list
+        Packet packet = ConnectionManager.receivePacket(client);
+        this.addPacket(client, packet);
+    }
+    
+    /**
+     * Adds a packet to be checked later
+     * @param client the client that received the packet
+     * @param packet the received packet
+     */
+    private synchronized void addPacket(Socket client, Packet packet) {
+        this.mPackets.add(new PacketMap(client, packet));
+    }
+
+    /**
+     * Allows for reading and removal of items from list. This is a non-blocking method and will return immediately if no packet is found.
+     * @param client the client to check packets for
+     * @param type the desired type of packet. PACKET_TYPE_NONE to find a null packet for termination
+     * @return the desired packet. Null otherwise
+     */
+    private synchronized Packet findPacket(Socket client, int type) {
+        // Check packet list
+        for (int i = 0; i < this.mPackets.size(); i++) {
+            PacketMap pm = this.mPackets.get(i);
+
+            // Check for nulls if wanted
+            if (pm.packet == null && type == Packet.PACKET_TYPE_NONE) {
+                this.removePacket(i);
+                return new Packet();
+            }
+
+            // Ensure no null before accessing data
+            if (pm.packet == null) {
+                continue;
+            }
+            
+            // Checks for specified params
+            if (pm.client == client && pm.packet.getType() == type) {
+                Packet packet = this.mPackets.get(i).packet;
+                this.removePacket(i);
+                return packet;
+            }
+        }
+        
+        // No packet found for that client with set params
+        return null;
+    }
+    
+    /**
+     * Removes packet from list
+     * @param index the index of the item to remove
+     */
+    private synchronized void removePacket(int index) {
+        this.mPackets.remove(index);
     }
     
     
