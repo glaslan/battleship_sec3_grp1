@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
+import com.belgianwaffles.battleship.Grid.GridCell;
+
 public class ClientConnectionManager implements Runnable{
 
     public static final int DEFAULT_PORT    = 27000;
@@ -51,13 +53,29 @@ public class ClientConnectionManager implements Runnable{
     }
 
     private void getGridPacket(Packet packet) {
-        Grid grid = packet.getGrid();
 
-        System.out.println("grid");
+        Grid grid = packet.getGrid();
+        boolean turn = packet.isTurn();
+
+        System.out.println("Got the griddy");
 
         if (!game.isGameStarted()) {
-            game.startGame(true);
+            game.startGame();
         }
+        game.setTurn(turn);
+        GridCell[][] cells = grid.getCells();
+
+
+        Grid newGrid = new Grid(cells);
+        game.updatePlayerBoard(newGrid);
+    }
+
+    public void sendGridToServer(Grid grid) throws IOException {
+        Packet packet = new Packet();
+        packet.serialize(grid);
+
+        var output = new DataOutputStream(connectionSocket.getOutputStream());
+        output.write(packet.getBuffer());
     }
     
     /**
