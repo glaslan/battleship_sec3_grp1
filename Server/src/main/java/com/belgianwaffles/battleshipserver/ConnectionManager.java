@@ -12,7 +12,7 @@ public final class ConnectionManager implements Runnable {
     // ----- Constants -----
 
     public static final int DEFAULT_PORT    = 27000;
-    public static final int DEFAULT_TIMEOUT = 3000;
+    public static final int DEFAULT_TIMEOUT = 10000;
 
 
 
@@ -211,7 +211,7 @@ public final class ConnectionManager implements Runnable {
             Packet packet = new Packet();
             byte[] head = input.readNBytes(Packet.HEADER_SIZE);
             packet.deserialize(head);
-    
+            
             // Get the packet body
             byte[] body = input.readNBytes(packet.getLength() + Packet.PACKET_TAIL_SIZE);
             

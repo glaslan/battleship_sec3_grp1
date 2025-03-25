@@ -44,6 +44,7 @@ public final class Packet {
          */
         public Header() {
             this.mData = new byte[HEADER_SIZE];
+            this.addType(PACKET_TYPE_NONE);
         }
 
         /**
@@ -202,6 +203,7 @@ public final class Packet {
             // Packet type
             String str = "Packet type: ";
             switch (this.getType()) {
+                case PACKET_TYPE_NONE -> str += "None";
                 case PACKET_TYPE_PING -> str += "Ping";
                 case PACKET_TYPE_GRID -> str += "Grid";
                 case PACKET_TYPE_IMAGE-> str += "Image";
@@ -274,7 +276,6 @@ public final class Packet {
 
     /**
      * Creates an empty data packet
-     * @param None
      */
     public Packet() {
         this.mHeader = new Header();
@@ -345,7 +346,6 @@ public final class Packet {
         
         // Setup body, empty but not null
         this.mBody = new byte[1];
-        this.setByte(0, (byte)0);
         
         // Pack data to packet
         this.pack();
@@ -542,11 +542,21 @@ public final class Packet {
     public String toString() {
         String str = this.mHeader.toString();
         switch (this.getType()) {
+            case PACKET_TYPE_NONE -> str += this.noneString();
             case PACKET_TYPE_PING -> str += this.pingString();
             case PACKET_TYPE_GRID -> str += this.gridString();
             case PACKET_TYPE_IMAGE-> str += this.assetString();
         }
         return str;
+    }
+
+    /**
+     * Formatted string for packet of type none
+     * @return string for none
+     */
+    private String noneString() {
+        // Nothing todo
+        return "";
     }
 
     /**
