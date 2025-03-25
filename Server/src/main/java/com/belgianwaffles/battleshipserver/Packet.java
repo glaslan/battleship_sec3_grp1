@@ -47,7 +47,15 @@ public final class Packet {
         }
 
         public void copy(byte[] bytes) {
-            System.arraycopy(bytes, 0, this.mData, 0, HEADER_SIZE);
+            try {
+                // Copy data into header
+                System.arraycopy(bytes, 0, this.mData, 0, HEADER_SIZE);
+            }
+            // No out of bounds crashes today
+            catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println("Out of bounds index passed to header");
+                FileLogger.logError(Header.class, "copy(byte[])", "Passed header length was too long");
+            }
         }
         
         
