@@ -82,10 +82,15 @@ public final class ConnectionManager implements Runnable {
                 }
             }
             catch (IOException e) {
+                // Prevent error messages on server close
+                if (!this.mRunningServer) {
+                    break;
+                }
+
+                // Server not closed, something went wrong
                 FileLogger.logError(ConnectionManager.class, "run()", 
                 "Something went wrong when connecting clients");
                 System.err.println("Something went wrong when connecting clients");
-                System.err.println("Ignore this message if server is closed");
             }
 
             // Attempt to start game
