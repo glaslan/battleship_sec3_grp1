@@ -75,26 +75,50 @@ public final class Grid {
         
         // ----- Setters -----
 
+        /**
+         * Sets the shark bit for p1
+         * @param hasShark true if shark should be set
+         */
         public void setSharkP1(boolean hasShark) {
             this.bitManipulate(MASK_SHARK_1, hasShark);
         }
         
+        /**
+         * Sets the shark bit for p2
+         * @param hasShark true if shark should be set
+         */
         public void setSharkP2(boolean hasShark) {
             this.bitManipulate(MASK_SHARK_2, hasShark);
         }
         
+        /**
+         * Sets the ship bit for p1
+         * @param hasShip true if ship should be placed
+         */
         public void setShipP1(boolean hasShip) {
             this.bitManipulate(MASK_SHIP_1, hasShip);
         }
         
+        /**
+         * Sets the shot bit for p1
+         * @param hasShot true if shot should be placed
+         */
         public void setShotP1(boolean hasShip) {
             this.bitManipulate(MASK_SHOT_1, hasShip);
         }
         
+        /**
+         * Sets the ship bit for p2
+         * @param hasShip true if ship should be placed
+         */
         public void setShipP2(boolean hasShot) {
             this.bitManipulate(MASK_SHIP_2, hasShot);
         }
         
+        /**
+         * Sets the shot bit for p2
+         * @param hasShot true if shot should be placed
+         */
         public void setShotP2(boolean hasShot) {
             this.bitManipulate(MASK_SHOT_2, hasShot);
         }
@@ -167,7 +191,10 @@ public final class Grid {
             return this.getBit(MASK_SHOT_2);
         }
 
-        public GridCell translateP1toP2() {
+        /**
+         * Converts the cells data from p1 to p2
+         */
+        public void translateP1toP2() {
             if (this.hasSharkP1()) {
                 this.setSharkP1(false);
                 this.setSharkP2(true);
@@ -180,9 +207,12 @@ public final class Grid {
                 this.setShotP1(false);
                 this.setShotP2(true);
             }
-            return this;
         }
-        public GridCell translateP2toP1() {
+
+        /**
+         * Converts the cell data from p2 to p1
+         */
+        public void translateP2toP1() {
             if (this.hasSharkP2()) {
                 this.setSharkP2(false);
                 this.setSharkP1(true);
@@ -195,9 +225,12 @@ public final class Grid {
                 this.setShotP2(false);
                 this.setShotP1(true);
             }
-            return this;
         }
         
+        /**
+         * Gives a binary representation of the cell byte data
+         * @return a formatted, printable cell
+         */
         @Override
         public String toString() {
             String str = "";
@@ -211,7 +244,7 @@ public final class Grid {
             str += (this.hasShotP2() ? "1" : "0");
 
             // Empty bits, can be added later
-            str += "00 ";
+            str += "00";
 
             return str;
         }
@@ -269,11 +302,18 @@ public final class Grid {
             }
         }
     }
-
+    
     /**
-     * Allows for the combination of 2 grids into 1
+     * Allows for the combination of 2 grids into 1.
+     * Converts g2 into second player data in grid.
+     * @param g1 player 1's grid
+     * @param g2 player 2's grid
      */
     public void combine(Grid g1, Grid g2) {
+        // Translate grid
+        g2.translateP1toP2();
+        
+        // Combine cells
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
                 this.mCells[i][j] = new GridCell((byte)(g1.mCells[i][j].getCell() | g2.mCells[i][j].getCell()));
@@ -301,14 +341,41 @@ public final class Grid {
         return this.copyCells();
     }
 
-    public Grid translateP1toP2() {
+    /**
+     * Allows for cells to be passed to grid
+     * @param cells the new cells to put into grid
+     */
+    public void setCells(GridCell[][] cells) {
+        this.mCells = new GridCell[GRID_SIZE][GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j] = new GridCell(cells[i][j].getCell());
+            }
+        }
+    }
+
+    /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void translateP1toP2() {
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
                 this.mCells[i][j].translateP1toP2();
             }
         }
-        return this;
     }
+    
+    /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void translateP2toP1() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].translateP2toP1();
+            }
+        }
+    }
+    
     /**
      * Allows for comparing of 2 grids to see how many differences there are
      * @return the number of differences in the grid
@@ -324,7 +391,7 @@ public final class Grid {
         }
         return diff;
     }
-
+    
     /**
      * Removes all sharks from the grid
      */
@@ -336,23 +403,18 @@ public final class Grid {
             }
         }
     }
-    
-    public Grid translateP2toP1() {
-        for (int i = 0; i < GRID_SIZE; i++) {
-            for (int j = 0; j < GRID_SIZE; j++) {
-                this.mCells[i][j].translateP2toP1();
-            }
-        }
-        return this;
-    }
 
+    /**
+     * Gives a formatted grid string
+     * @return A formatted, printable string
+     */
     @Override
     public String toString() {
         String str = "";
         
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
-                str += this.mCells[i][j].toString();
+                str += this.mCells[i][j].toString() + " ";
             }
             str += '\n';
         }

@@ -25,6 +25,11 @@ public final class ConnectionManager implements Runnable {
 
     // ----- Methods -----
 
+    /**
+     * Sets up the server
+     * @param port the port for the server to listen on
+     * @throws IOException from any issues when creating server
+     */
     public ConnectionManager(int port) throws IOException {
         this.mServer = new ServerSocket(port);
         this.mClient1 = null;
@@ -32,6 +37,10 @@ public final class ConnectionManager implements Runnable {
         this.mRunningServer = true;
     }
 
+    /**
+     * Closes the server and ends all currently running games
+     * @return
+     */
     public boolean close() {
         // Closes server sockets and ends all games in progress
         this.mRunningServer = false;
@@ -50,6 +59,9 @@ public final class ConnectionManager implements Runnable {
 
     // ----- Threading -----
     
+    /**
+     * Main listening thread for the server
+     */
     @Override
     public void run() {
         System.out.println("Server is awaiting connections");
