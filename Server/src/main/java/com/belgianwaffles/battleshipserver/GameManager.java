@@ -38,6 +38,11 @@ public class GameManager implements Runnable {
     
         // ----- Methods -----
         
+        /**
+         * Creates a new game with the passed clients
+         * @param s1 first client
+         * @param s2 second client
+         */
         public GameManager(Socket s1, Socket s2) {
             this.mClient1 = s1;
             this.mClient2 = s2;
@@ -51,6 +56,9 @@ public class GameManager implements Runnable {
         
         // ----- Threading -----
         
+        /**
+         * Main thread for game to run on
+         */
         @Override
         @SuppressWarnings("ConvertToTryWithResources")
         public void run() {
@@ -94,7 +102,7 @@ public class GameManager implements Runnable {
                         grid.translateP1toP2();
                     }
                     this.mGrid.combine(this.mGrid, grid);
-                    this.generateSugarSharks(mGrid);
+                    this.generateSugarSharks();
                 }
     
                 // Do some stuff with sendsing
@@ -117,7 +125,11 @@ public class GameManager implements Runnable {
         
         
         // ----- Game ----- Methods -----
-            
+        
+        /**
+         * Checks for how many ships are left in the grid
+         * @return number of ships remaining
+         */
         private int getShipsRemaining() {
             Grid.GridCell[][] matrix = this.mGrid.getCells();
             int shipsLeft = 0;
@@ -144,49 +156,138 @@ public class GameManager implements Runnable {
             return shipsLeft;
         }
     
-        private Grid generateSugarSharks(Grid grid) {
-            // odds of sugar shark = 1/chance
+        /**
+         * Generates sugar sharks for held grid
+         */
+        private void generateSugarSharks() {
+            // ----- Method ----- Constants -----
+
             final int amountOfSharks = 3, maxattepts = 50;
-            int numberOfSharks = amountOfSharks;
-            //int chance = 10;
-            Random rng = new Random(System.currentTimeMillis());
-    
-            for (int i = 0; i < Grid.GRID_SIZE; i++) {
-                for (int j = 0; j < Grid.GRID_SIZE; j++) {
-                    // clear current sharks
-                    grid.getCells()[i][j].setSharkP1(false);
-                    grid.getCells()[i][j].setSharkP2(false);
+            
+            // ----- Data ----- Prep -----
+
+            this.mGrid.removeSharks();
+            
+            // ----- Main ----- Logic -----
+            
+            // Create sharks for player 1
+            for (int i = 0; i < amountOfSharks; i++) {
+                this.generateSingleSugarShark(1, maxattepts);
+            }
+
+            // Create sharks for player 2
+            for (int i = 0; i < amountOfSharks; i++) {
+                this.generateSingleSugarShark(2, maxattepts);
+            }
+        }
+
+        /**
+         * Generates a single sugar shark for a given grid
+         * @param player the player to add a shark to
+         * @param maxAttempts the amount of cells to try randomly before brute forcing
+         */
+        private void generateSingleSugarShark(int player, int maxAttempts) {
+            final Random rng = new Random(System.currentTimeMillis());
+
+            // Gets cells to update
+            var cells = this.mGrid.getCells();
+
+            // First, attempt to randomly place shark
+            for (int i = 0; i < maxAttempts; i++) {
+                // Setup indexing
+                int index = rng.nextInt(0, Grid.GRID_SIZE * Grid.GRID_SIZE);
+                int x = index % Grid.GRID_SIZE, y = index / Grid.GRID_SIZE;
+                
+                // Check if cell has ship or has been shot
+                if (this.checkCell(player, cells[x][y])) {
+                    // Determine which player to set
+                    if (player == 1) {
+                        cells[x][y].setSharkP1(true);
+                    }
+                    else {
+                        cells[x][y].setSharkP2(true);
+                    }
+
+                    // Update cells
+                    this.mGrid.setCells(cells);
+                    return;
                 }
             }
-            // max attempts to create 3 sharks
-            int attempts = maxattepts;
-            // P1 sharks
-            while (numberOfSharks > 0 && attempts > 0) {
-                if (!grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShipP2() 
-                && !grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShotP1()) {
-                    grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].setSharkP1(true);
-                    numberOfSharks--;
-                    attempts = maxattepts;
+
+            // First attempt failed, brute force from top left to bottom right
+            for (int i = 0; i < Grid.GRID_SIZE * Grid.GRID_SIZE; i++) {
+                // Setup indexing
+                int index = i;
+                int x = index % Grid.GRID_SIZE, y = index / Grid.GRID_SIZE;
+                
+                // Check if cell has ship or has been shot
+                if (this.checkCell(player, cells[x][y])) {
+                    // Determine which player to set
+                    if (player == 1) {
+                        cells[x][y].setSharkP1(true);
+                    }
+                    else {
+                        cells[x][y].setSharkP2(true);
+                    }
+
+                    // Update cells
+                    this.mGrid.setCells(cells);
+                    return;
                 }
-                attempts--;
             }
-    
-            numberOfSharks = amountOfSharks;
-            attempts = maxattepts;
-            while (numberOfSharks > 0 && attempts > 0) {
-                if (!grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShipP1() 
-                && !grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].hasShotP2()) {
-                    grid.getCells()[rng.nextInt(Grid.GRID_SIZE)][rng.nextInt(Grid.GRID_SIZE)].setSharkP2(true);
-                    numberOfSharks--;
-                    attempts = maxattepts;
+        }
+        
+        /**
+         * Checks the flags in cell for if a shark can be placed
+         * @param player player 1 or player 2
+         * @param cell the cell to check
+         * @return true if cell does not have invalid flags in positions
+         */
+        private boolean checkCell(int player, Grid.GridCell cell) {
+            if (player == 1) {
+                // Cannot have shark
+                if (cell.hasSharkP1()) {
+                    return false;
                 }
-                attempts--;
+            
+                // Cannot be shot
+                if (cell.hasShotP1()) {
+                    return false;
+                }
+            
+                // Cannot have ship
+                if (cell.hasShipP2()) {
+                    return false;
+                }
+                return true;
             }
-            return grid;
+            if (player == 2) {
+                // Cannot have shark
+                if (cell.hasSharkP2()) {
+                    return false;
+                }
+
+                // Cannot be shot
+                if (cell.hasShotP2()) {
+                    return false;
+                }
+
+                // Cannot have ship
+                if (cell.hasShipP1()) {
+                    return false;
+                }
+                return true;
+            }
+
+            // Something went wrong
+            return false;
         }
     
         // ----- Start ----- End -----
         
+        /**
+         * Sets up game and sends some packets to clients with board information
+         */
         private void startGame() {
             System.out.println("Starting game on thread id=" + Thread.currentThread().threadId());
     
@@ -206,11 +307,11 @@ public class GameManager implements Runnable {
             // Receive packets with grid data
             Packet p1 = ConnectionManager.receivePacket(this.mClient1);
             Packet p2 = ConnectionManager.receivePacket(this.mClient2);
+
             try {
                 // Combine grids into one
                 Grid p1Grid = p1.getGrid();
                 Grid p2Grid = p2.getGrid();
-                p2Grid.translateP1toP2();
                 this.mGrid.combine(p1Grid, p2Grid);
             } catch (IllegalStateException e) {
                 System.err.println("Could not parse grid from client");
@@ -218,6 +319,9 @@ public class GameManager implements Runnable {
             }
         }
         
+        /**
+         * After ending the game, closes all necessary data
+         */
         private void endGame() {
             // Send winning data
             
@@ -243,6 +347,9 @@ public class GameManager implements Runnable {
             }
         }
     
+        /**
+         * Allows for ending all games simultaneously on all threads
+         */
         public static synchronized void endAllGames() {
             sServerClosed = true;
         }
@@ -251,10 +358,17 @@ public class GameManager implements Runnable {
     
         // ----- Read -----
     
+        /**
+         * Checks if game is still able to be playing
+         * @return true if game is still valid
+         */
         private synchronized boolean play() {
             return (!this.mGameOver && !sServerClosed);
         }
     
+        /**
+         * Pings clients to ensure connections have not been severed
+         */
         private synchronized void pingClients() {
             // If a client has disconnected, end game
             if (!ConnectionManager.ping(mClient1) || !ConnectionManager.ping(mClient2)) {

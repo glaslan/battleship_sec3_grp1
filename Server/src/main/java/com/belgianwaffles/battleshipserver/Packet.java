@@ -46,6 +46,10 @@ public final class Packet {
             this.mData = new byte[HEADER_SIZE];
         }
 
+        /**
+         * Copies data into header
+         * @param bytes the bytes to put into the packet header
+         */
         public void copy(byte[] bytes) {
             try {
                 // Copy data into header
@@ -62,6 +66,12 @@ public final class Packet {
         
         // ----- Bit ----- Manipulators -----
         
+        /**
+         * Manipulates specified bits in header
+         * @param byteNum the index in the header, use defined values
+         * @param mask the mask for the header item, use defined values
+         * @param newData the new data to put into the byte
+         */
         private void bitManipulate(int byteNum, byte mask, byte newData) {
             this.mData[byteNum] |= mask & newData;
         }
@@ -183,6 +193,10 @@ public final class Packet {
             return this.mData;
         }
 
+        /**
+         * Packages the packet into a nicely formatted string
+         * @return String of printableness
+         */
         @Override
         public String toString() {
             // Packet type
@@ -324,7 +338,6 @@ public final class Packet {
 
     /**
      * Serializes a ping packet
-     * @param None
      */
     public void serialize() {
         // Setup header
@@ -357,7 +370,7 @@ public final class Packet {
 
     /**
      * Serializes a grid packet for game information
-     * @param None
+     * @param grid the grid to serialize into the packet
      */
     public void serialize(Grid grid) {
         // Setup header
@@ -536,15 +549,27 @@ public final class Packet {
         return str;
     }
 
+    /**
+     * Formatted string for packet of type ping
+     * @return string for ping
+     */
     private String pingString() {
         // Nothing todo
         return "";
     }
-
+    
+    /**
+     * Formatted string for packet of type grid
+     * @return string for grid
+     */
     private String gridString() {
         return this.getGrid().toString();
     }
-
+    
+    /**
+     * Formatted string for packet of type image
+     * @return string for image
+     */
     private String assetString() {
         String str = "Sent icon of type: ";
         if (this.hasFlag(PACKET_FLAG_WATER)) {
