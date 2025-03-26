@@ -322,23 +322,12 @@ public final class Grid {
     }
 
     /**
-     * Copies cell data so it can be changed outside of class without affecting actual grid
-     */
-    private GridCell[][] copyCells() {
-        GridCell[][] copy = new GridCell[GRID_SIZE][GRID_SIZE];
-        for (int i = 0; i < GRID_SIZE; i++) {
-            System.arraycopy(this.mCells[i], 0, copy[i], 0, GRID_SIZE);
-        }
-        return copy;
-    }
-
-    /**
-     * Gets a copy of the cell contents of the grid.
+     * Gets the cell contents of the grid.
      * Can create a new grid with the changed data.
      * @return 2D array with all gridcells
      */
     public GridCell[][] getCells() {
-        return this.copyCells();
+        return this.mCells;
     }
 
     /**

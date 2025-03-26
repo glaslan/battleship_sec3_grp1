@@ -9,6 +9,11 @@ public class Ship {
     
 
     // ----- Data -----
+
+    private static int sLength2 = 1;
+    private static int sLength3 = 2;
+    private static int sLength4 = 1;
+    private static int sLength5 = 1;
     
     private final Coordinate mStart, mEnd;
     private final int mLength;
@@ -48,6 +53,41 @@ public class Ship {
         else {
             this.mIsHorizontal = false;
             this.mLength = -1;
+            this.mIsValid = false;
+            return;
+        }
+
+        // Update ship counts
+        switch (this.mLength) {
+        case 2:
+            if (sLength2 == 0) {
+                this.mIsValid = false;
+                return;
+            }
+            sLength2--;
+            break;
+        case 3:
+            if (sLength3 == 0) {
+                this.mIsValid = false;
+                return;
+            }
+            sLength3--;
+            break;
+        case 4:
+            if (sLength4 == 0) {
+                this.mIsValid = false;
+                return;
+            }
+            sLength4--;
+            break;
+        case 5:
+            if (sLength5 == 0) {
+                this.mIsValid = false;
+                return;
+            }
+            sLength5--;
+            break;
+        default:
             this.mIsValid = false;
             return;
         }
