@@ -14,7 +14,6 @@ public class Ship {
     private final int mLength;
     private final boolean mIsHorizontal, mIsValid;
 
-    private boolean mIsSunk;
     private int mShotCount;
 
 
@@ -54,7 +53,6 @@ public class Ship {
         }
 
         // Other variables
-        this.mIsSunk = false;
         this.mIsValid = true;
         this.mShotCount = 0;
     }
@@ -76,7 +74,7 @@ public class Ship {
      * @return true if ship is sunk
      */
     public boolean isSunk() {
-        return this.mIsSunk;
+        return (this.mShotCount >= this.mLength);
     }
 
 
@@ -103,7 +101,7 @@ public class Ship {
      * @param y y coordinate of shot
      */
     private void shootHorizontal(int x, int y) {
-        
+
     }
 
     /**
