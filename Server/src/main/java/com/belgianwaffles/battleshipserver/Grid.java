@@ -396,7 +396,7 @@ public final class Grid {
         
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
-                str += this.mCells[i][j].toString() + " ";
+                str += this.mCells[j][i].toString() + " ";
             }
             str += '\n';
         }

@@ -186,4 +186,37 @@ public class Ship {
             System.err.println("How dare");
         }
     }
+
+
+    public boolean getIsHorizontal() {
+        return mIsHorizontal;
+    }
+
+    public int getStartX() {
+        return mStart.x;
+    }
+
+    public int getStartY() {
+        return mStart.y;
+    }
+
+    public int getEndX() {
+        return mEnd.x;
+    }
+
+    public int getEndY() {
+        return mEnd.y;
+    }
+
+    @Override
+    public String toString() {
+        String s = "Start x: " + this.getStartX() + "\n";
+        s += "Start y: " + this.getStartY() + "\n";
+        s += "End x: " + this.getEndX() + "\n";
+        s += "End y: " + this.getEndY() + "\n";
+        s += "Length: " + this.mLength;
+
+        return s;
+    }
 }
+

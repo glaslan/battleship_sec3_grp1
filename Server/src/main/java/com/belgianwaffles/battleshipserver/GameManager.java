@@ -25,6 +25,8 @@ public class GameManager implements Runnable {
     
     private final Socket mClient1, mClient2;
     private final Grid mGrid;
+    private ArrayList <Ship> p1Ships;
+    private ArrayList <Ship> p2Ships;
 
     // For easy swapping
     private Socket mCurrentSocket;
@@ -59,6 +61,8 @@ public class GameManager implements Runnable {
 
         this.mGrid = new Grid();
         this.mPackets = new ArrayList<>();
+        this.p1Ships = new ArrayList<>();
+        this.p2Ships = new ArrayList<>();
     }
     
     
@@ -287,7 +291,245 @@ public class GameManager implements Runnable {
     }
 
 
+    public static ArrayList<Ship> createAllP1Ships(Grid g) {
+        ArrayList <Ship> shipList = new ArrayList<>();
+        // no need to check first ship since the board should be empty
+        shipList.add(new Ship(5));
 
+        Ship temp = createValidShipP1(g, 4);
+        // i dont trust java
+        shipList.add(new Ship(temp));
+
+        temp = createValidShipP1(g, 3);
+        shipList.add(new Ship(temp));
+
+        temp = createValidShipP1(g, 3);
+        shipList.add(new Ship(temp));
+
+        temp = createValidShipP1(g, 2);
+        shipList.add(new Ship(temp));
+        
+        
+        return shipList;
+    }
+
+    // im making two functions since this one is already huge
+    public static boolean shipPlacementIsAvailableP1(Grid g, Ship s) {
+        // endpoint check
+        if(!(s.getStartX()-1 < 0)) {
+            if(g.getCells()[s.getStartX()-1][s.getStartY()].hasShipP1()) {
+                return false;
+            }  
+        }
+        if(!(s.getEndX()+1 >= Grid.GRID_SIZE)) {
+            if(g.getCells()[s.getEndX()+1][s.getStartY()].hasShipP1()) {
+                return false;
+            }
+        }
+        if(!(s.getEndY()+1 >= Grid.GRID_SIZE)) {
+            if(g.getCells()[s.getStartX()][s.getEndY()+1].hasShipP1()) {
+                return false;
+            }
+        }
+        if(!(s.getStartY()-1 < 0)) {
+            if(g.getCells()[s.getStartX()][s.getStartY()-1].hasShipP1()) {
+                return false;
+            }
+        }
+        // body checks
+
+        // horizontal ship
+        if(s.getIsHorizontal()) {
+            
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                if(g.getCells()[i][s.getStartY()].hasShipP1()) {
+                    return false;
+                }
+                // prevents out of bounds checks
+                if(!(s.getStartY() == Grid.GRID_SIZE-1)) {
+                    if(g.getCells()[i][s.getStartY()+1].hasShipP1()) {
+                        return false;
+                    }
+                }  
+                if(!(s.getStartY() == 0)) {
+                    if(g.getCells()[i][s.getStartY()-1].hasShipP1()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+        // vertical ship
+        else {
+            
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                if(g.getCells()[s.getStartX()][i].hasShipP1()) {
+                    return false;
+                }
+                if(!(s.getStartX() == Grid.GRID_SIZE-1)) {
+                    if(g.getCells()[s.getStartX()+1][i].hasShipP1()) {
+                        return false;
+                    }  
+                }
+                if(!(s.getStartX() == 0)) {
+                    if(g.getCells()[s.getStartX()-1][i].hasShipP1()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+        return true;
+    }
+
+    public static void placeShipP1(Grid g, Ship s) {
+        if(s.getIsHorizontal()) {
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
+                g.getCells()[i][s.getStartY()].setShipP1(true);   
+            }
+        }
+        else {
+            for (int i = 0; i <= s.getEndY(); i++) {
+                g.getCells()[s.getStartX()][i].setShipP1(true);   
+            }
+        }
+    }
+
+    public static void placeAllShipsP1(Grid g, ArrayList<Ship> s) {
+        for (int i = 0; i < s.size(); i++) {
+            placeShipP1(g, s.get(i));  
+        }
+    }
+
+    public static Ship createValidShipP1(Grid g, int size) {
+        boolean isValidPlacement;
+        Ship s;
+        do {
+            s = new Ship(size);
+            isValidPlacement = shipPlacementIsAvailableP1(g, s);
+            System.out.println("ran: " + isValidPlacement);
+            System.out.println("\nship:\n " + s);
+            System.out.println("\nGrid:\n" + g + "\n");
+        } while(!isValidPlacement);
+        
+        return s;
+    }
+    
+    
+    private static boolean shipPlacementIsAvailableP2(Grid g, Ship s) {
+   
+        // horizontal ship
+        if(s.getIsHorizontal()) {
+            if(!(s.getStartX()-1 < 0)) {
+                if(g.getCells()[s.getStartX()-1][s.getStartY()].hasShipP2()) {
+                    return false;
+                }  
+            }
+            if(!(s.getEndX()+1 >= Grid.GRID_SIZE)) {
+                if(g.getCells()[s.getStartX()+1][s.getStartY()].hasShipP2()) {
+                    return false;
+                }
+            }
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                if(g.getCells()[i][s.getStartY()].hasShipP2()) {
+                    return false;
+                }
+                // prevents out of bounds checks
+                if(!(s.getStartY() == Grid.GRID_SIZE-1)) {
+                    if(g.getCells()[i][s.getStartY()+1].hasShipP2()) {
+                        return false;
+                    }
+                }  
+                if(!(s.getStartY() == 0)) {
+                    if(g.getCells()[i][s.getStartY()-1].hasShipP2()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+        // vertical ship
+        else {
+            if(!(s.getEndY()+1 >= Grid.GRID_SIZE)) {
+                if(g.getCells()[s.getStartX()][s.getEndY()+1].hasShipP2()) {
+                    return false;
+                }
+            }
+            if(!(s.getStartY()-1 < 0)) {
+                if(g.getCells()[s.getStartX()][s.getStartY()-1].hasShipP2()) {
+                    return false;
+                }
+            }
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                if(g.getCells()[s.getStartX()][i].hasShipP2()) {
+                    return false;
+                }
+                if(!(s.getStartX() == Grid.GRID_SIZE-1)) {
+                    if(g.getCells()[s.getStartX()+1][i].hasShipP2()) {
+                        return false;
+                    }  
+                }
+                if(!(s.getStartX() == 0)) {
+                    if(g.getCells()[s.getStartX()-1][i].hasShipP2()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+        return true;
+    }
+
+    public static ArrayList<Ship> createAllP2Ships(Grid g) {
+        ArrayList <Ship> shipList = new ArrayList<>();
+        // no need to check first ship since the board should be empty
+        shipList.add(new Ship(5));
+
+        Ship temp = createValidShipP2(g, 4);
+        // i dont trust java
+        shipList.add(new Ship(temp));
+
+        temp = createValidShipP2(g, 3);
+        shipList.add(new Ship(temp));
+
+        temp = createValidShipP2(g, 3);
+        shipList.add(new Ship(temp));
+
+        temp = createValidShipP2(g, 2);
+        shipList.add(new Ship(temp));
+        
+        
+        return shipList;
+    }  
+
+    private static void placeShipP2(Grid g, Ship s) {
+        if(s.getIsHorizontal()) {
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
+                g.getCells()[i][s.getStartY()].setShipP2(true);   
+            }
+        }
+        else {
+            for (int i = 0; i <= s.getEndY(); i++) {
+                g.getCells()[s.getStartX()][i].setShipP2(true);   
+            }
+        }
+    }
+
+    public static void placeAllShipsP2(Grid g, ArrayList<Ship> s) {
+        for (int i = 0; i < s.size(); i++) {
+            placeShipP2(g, s.get(i));  
+        }
+    }
+
+    private static Ship createValidShipP2(Grid g, int size) {
+        boolean isValidPlacement;
+        Ship s;
+        do {
+            s = new Ship(size);
+            isValidPlacement = shipPlacementIsAvailableP2(g, s);
+        } while(!isValidPlacement);
+        
+        return s;
+    }
+    
+    
+    
     // ----- Start ----- End -----
     
     /**
@@ -529,10 +771,10 @@ public class GameManager implements Runnable {
         if (this.mCurrentPlayerIsOne) {
             this.mCurrentSocket = this.mClient2;
             this.mCurrentPlayerIsOne = false;
+        }
+        else {
+            this.mCurrentSocket = this.mClient1;
+            this.mCurrentPlayerIsOne = true;
+        }
     }
-    else {
-        this.mCurrentSocket = this.mClient1;
-        this.mCurrentPlayerIsOne = true;
-    }
-}
 }
