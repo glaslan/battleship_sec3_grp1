@@ -302,7 +302,7 @@ public final class Grid {
      * @param g1 player 1's grid
      * @param g2 player 2's grid
      */
-    public void combine(Grid g1, Grid g2) {
+    public synchronized void combine(Grid g1, Grid g2) {
         // Translate grid
         g2.translateP1toP2();
         
@@ -386,6 +386,52 @@ public final class Grid {
         }
     }
 
+
+
+    // ----- Ship ----- Creation -----
+
+    /**
+     * Randomly generates ships in the grid for player 1
+     */
+    public void generateShipsPlayer1() {
+        // Clear old ships
+        this.clearShipsPlayer1();
+
+        // Generate new ones
+    }
+
+    /**
+     * Randomly generates ships in the grid for player 2
+     */
+    public void generateShipsPlayer2() {
+        // Clear old ships
+        this.clearShipsPlayer2();
+
+        // Generate new ones
+    }
+
+    /**
+     * Removes old ships from grid so new ones can be added
+     */
+    private void clearShipsPlayer1() {
+        for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            this.mCells[i % GRID_SIZE][i / GRID_SIZE].setShipP1(false);
+        }
+    }
+
+    /**
+     * Removes old ships from grid so new ones can be added
+     */
+    private void clearShipsPlayer2() {
+        for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            this.mCells[i % GRID_SIZE][i / GRID_SIZE].setShipP2(false);
+        }
+    }
+    
+
+
+    // ----- Extras -----
+    
     /**
      * Gives a formatted grid string
      * @return A formatted, printable string

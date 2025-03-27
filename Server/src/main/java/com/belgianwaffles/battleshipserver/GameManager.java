@@ -580,8 +580,50 @@ public class GameManager implements Runnable {
 
         // Receive packets with grid data
         Packet p1 = null, p2 = null;
-        while (p1 == null && this.play()) { p1 = this.findPacket(this.mClient1, Packet.PACKET_TYPE_GRID); }
-        while (p2 == null && this.play()) { p2 = this.findPacket(this.mClient2, Packet.PACKET_TYPE_GRID); }
+        while (p1 == null && this.play()) {
+            p1 = this.findPacket(this.mClient1, Packet.PACKET_TYPE_GRID);
+            if (p1 == null) {
+                continue;
+            }
+
+            // Check flags
+            if (p1.hasFlag(Packet.PACKET_FLAG_REFRESH)) {
+                // Send another board
+                Grid g = new Grid();
+                g.generateShipsPlayer1();
+                packet.serialize(g);
+                ConnectionManager.sendPacket(mClient1, packet);
+                continue;
+            }
+            
+            // Grid confirmed
+            if (p1.hasFlag(Packet.PACKET_FLAG_CONFIRM)) {
+                Grid g = p1.getGrid();
+                this.mGrid.combine(g, this.mGrid);
+            }
+        }
+        while (p2 == null && this.play()) {
+            p2 = this.findPacket(this.mClient2, Packet.PACKET_TYPE_GRID);
+            if (p2 == null) {
+                continue;
+            }
+    
+            // Check flags
+            if (p2.hasFlag(Packet.PACKET_FLAG_REFRESH)) {
+                // Send another board
+                Grid g = new Grid();
+                g.generateShipsPlayer2();
+                packet.serialize(g);
+                ConnectionManager.sendPacket(mClient1, packet);
+                continue;
+            }
+            
+            // Grid confirmed
+            if (p2.hasFlag(Packet.PACKET_FLAG_CONFIRM)) {
+                Grid g = p2.getGrid();
+                this.mGrid.combine(this.mGrid, g);
+            }
+        }
 
         // Check game over
         if (!this.play()) {
