@@ -17,7 +17,8 @@ public class Ship {
     
     private final Coordinate mStart, mEnd;
     private final int mLength;
-    private final boolean mIsHorizontal, mIsValid;
+    private final boolean mIsHorizontal;
+    private final boolean[] mShotSpots;
 
     private int mShotCount;
 
@@ -28,13 +29,14 @@ public class Ship {
     // ----- Creation -----
     
     /**
-     * Creates unsunk ship at given coordinates. Call isValid() to ensure that ship is valid
+     * Creates unsunk ship at given coordinates.
      * @param x1 start x coordinate
      * @param y1 start y coordinate
      * @param x2 end x coordinate
      * @param y2 end y coordinate
+     * @throws IllegalArgumentException on detection of an invalid ship
      */
-    public Ship(int x1, int y1, int x2, int y2) {
+    public Ship(int x1, int y1, int x2, int y2) throws IllegalArgumentException {
         // Add coordinates
         this.mStart = new Coordinate(x1, y1);
         this.mEnd = new Coordinate(x2, y2);
@@ -42,69 +44,53 @@ public class Ship {
         // Check if ship is horizontal
         if (y1 == y2) {
             this.mIsHorizontal = true;
-            this.mLength = x2 - x1;
+            this.mLength = (x2 - x1) + 1;
         }
         // Check if ship is vertical
         else if (x1 == x2) {
             this.mIsHorizontal = false;
-            this.mLength = y2 - y1;
+            this.mLength = (y2 - y1) + 1;
         }
         // Ship is invalid
         else {
-            this.mIsHorizontal = false;
-            this.mLength = -1;
-            this.mIsValid = false;
-            return;
+            throw new IllegalArgumentException();
         }
 
-        // Update ship counts
+        // Update ship counts based on length
         switch (this.mLength) {
         case 2:
             if (sLength2 == 0) {
-                this.mIsValid = false;
-                return;
+                throw new IllegalArgumentException();
             }
             sLength2--;
             break;
         case 3:
             if (sLength3 == 0) {
-                this.mIsValid = false;
-                return;
+                throw new IllegalArgumentException();
             }
             sLength3--;
             break;
         case 4:
             if (sLength4 == 0) {
-                this.mIsValid = false;
-                return;
+                throw new IllegalArgumentException();
             }
             sLength4--;
             break;
         case 5:
             if (sLength5 == 0) {
-                this.mIsValid = false;
-                return;
+                throw new IllegalArgumentException();
             }
             sLength5--;
             break;
         default:
-            this.mIsValid = false;
-            return;
+            throw new IllegalArgumentException();
         }
 
         // Other variables
-        this.mIsValid = true;
         this.mShotCount = 0;
+        this.mShotSpots = new boolean[this.mLength];
     }
-
-    /**
-     * This allows you to check that the created ship was valid
-     * @return true if valid
-     */
-    public boolean isValid() {
-        return this.mIsValid;
-    }
-
+    
 
 
     // ----- Read -----
@@ -141,6 +127,17 @@ public class Ship {
      * @param y y coordinate of shot
      */
     private void shootHorizontal(int x, int y) {
+        // Check y, must be in range
+        if (y != this.mStart.y) {
+            return;
+        }
+
+        // Check x, must be in range
+        if (x <= this.mStart.x || this.mEnd.x < x) {
+            return;
+        }
+
+        // Ship was shot, but ensure its not same spot
 
     }
 
