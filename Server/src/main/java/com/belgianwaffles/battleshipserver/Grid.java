@@ -10,9 +10,9 @@ public final class Grid {
 
         private static final byte MASK_ALL      = (byte)0b11111111;
         private static final byte MASK_SHARK_1  = (byte)0b10000000;
-        private static final byte MASK_SHARK_2  = (byte)0b01000000;
-        private static final byte MASK_SHIP_1   = (byte)0b00100000;
-        private static final byte MASK_SHOT_1   = (byte)0b00010000;
+        private static final byte MASK_SHIP_1   = (byte)0b01000000;
+        private static final byte MASK_SHOT_1   = (byte)0b00100000;
+        private static final byte MASK_SHARK_2  = (byte)0b00010000;
         private static final byte MASK_SHIP_2   = (byte)0b00001000;
         private static final byte MASK_SHOT_2   = (byte)0b00000100;
 
@@ -20,14 +20,7 @@ public final class Grid {
 
         // ----- Data -----
 
-        // first position:      is on fire
-        // second position:     has shark
-        // third position:      has ship p1
-        // fourth position      shot by p1
-        // fifth position:      has ship p2
-        // sixth position:      shot by p2
-        // seventh position:    nothing
-        // eighth position:     nothing
+        // If you want to know what the stuff means, refer to masks
         byte mCell;
 
 

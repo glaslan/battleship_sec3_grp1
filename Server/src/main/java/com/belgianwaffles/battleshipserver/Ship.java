@@ -138,15 +138,52 @@ public class Ship {
         }
 
         // Ship was shot, but ensure its not same spot
-
+        int index = x - this.mStart.x;
+        try {
+            // Ship not shot yet
+            if (!this.mShotSpots[index]) {
+                this.mShotSpots[index] = true;
+                this.mShotCount++;
+            }
+            // Already shot here
+            else {
+                return;
+            }
+        } catch (IndexOutOfBoundsException e) {
+            System.err.println("How dare");
+        }
     }
-
+    
     /**
-     * Shoots horizontal ship
+     * Shoots vertical ship
      * @param x x coordinate of shot
      * @param y y coordinate of shot
      */
     private void shootVertical(int x, int y) {
-
+        // Check x, must be in range
+        if (x != this.mStart.x) {
+            return;
+        }
+    
+        // Check y, must be in range
+        if (y <= this.mStart.y || this.mEnd.y < y) {
+            return;
+        }
+    
+        // Ship was shot, but ensure its not same spot
+        int index = y - this.mStart.y;
+        try {
+            // Ship not shot yet
+            if (!this.mShotSpots[index]) {
+                this.mShotSpots[index] = true;
+                this.mShotCount++;
+            }
+            // Already shot here
+            else {
+                return;
+            }
+        } catch (IndexOutOfBoundsException e) {
+            System.err.println("How dare");
+        }
     }
 }
