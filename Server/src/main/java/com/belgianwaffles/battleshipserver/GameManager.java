@@ -291,7 +291,10 @@ public class GameManager implements Runnable {
     }
 
 
-    public static ArrayList<Ship> createAllP1Ships(Grid g) {
+    // Ship Generation Methods
+
+    // creates and places all p1 ships
+    public ArrayList<Ship> createAllP1Ships(Grid g) {
         ArrayList <Ship> shipList = new ArrayList<>();
         // no need to check first ship since the board should be empty
         Ship temp = new Ship(5);
@@ -320,7 +323,8 @@ public class GameManager implements Runnable {
     }
 
     // im making two functions since this one is already huge
-    public static boolean shipPlacementIsAvailableP1(Grid g, Ship s) {
+    // checks for a valid placement for a p1 ship
+    private boolean shipPlacementIsAvailableP1(Grid g, Ship s) {
         // endpoint check
         if(!(s.getStartX()-1 < 0)) {
             if(g.getCells()[s.getStartX()-1][s.getStartY()].hasShipP1()) {
@@ -347,7 +351,7 @@ public class GameManager implements Runnable {
         // horizontal ship
         if(s.getIsHorizontal()) {
             
-            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
                 if(g.getCells()[i][s.getStartY()].hasShipP1()) {
                     return false;
                 }
@@ -386,7 +390,7 @@ public class GameManager implements Runnable {
         return true;
     }
 
-    public static void placeShipP1(Grid g, Ship s) {
+    private void placeShipP1(Grid g, Ship s) {
         if(s.getIsHorizontal()) {
             for (int i = s.getStartX(); i <= s.getEndX(); i++) {
                 g.getCells()[i][s.getStartY()].setShipP1(true);   
@@ -399,42 +403,47 @@ public class GameManager implements Runnable {
         }
     }
 
-    public static void placeAllShipsP1(Grid g, ArrayList<Ship> s) {
-        for (int i = 0; i < s.size(); i++) {
-            placeShipP1(g, s.get(i));  
-        }
-    }
-
-    public static Ship createValidShipP1(Grid g, int size) {
+    // creates a valid p1 ship
+    private Ship createValidShipP1(Grid g, int size) {
         boolean isValidPlacement;
         Ship s;
         do {
             s = new Ship(size);
             isValidPlacement = shipPlacementIsAvailableP1(g, s);
-            System.out.println("ran: " + isValidPlacement);
-            System.out.println("\nship:\n " + s);
-            System.out.println("\nGrid:\n" + g + "\n");
         } while(!isValidPlacement);
         
         return s;
     }
     
-    
-    private static boolean shipPlacementIsAvailableP2(Grid g, Ship s) {
-   
+    // checks for a valid placement for a p2 ship
+    private boolean shipPlacementIsAvailableP2(Grid g, Ship s) {
+        // endpoint check
+        if(!(s.getStartX()-1 < 0)) {
+            if(g.getCells()[s.getStartX()-1][s.getStartY()].hasShipP2()) {
+                return false;
+            }  
+        }
+        if(!(s.getEndX()+1 >= Grid.GRID_SIZE)) {
+            if(g.getCells()[s.getEndX()+1][s.getStartY()].hasShipP2()) {
+                return false;
+            }
+        }
+        if(!(s.getEndY()+1 >= Grid.GRID_SIZE)) {
+            if(g.getCells()[s.getStartX()][s.getEndY()+1].hasShipP2()) {
+                return false;
+            }
+        }
+        if(!(s.getStartY()-1 < 0)) {
+            if(g.getCells()[s.getStartX()][s.getStartY()-1].hasShipP2()) {
+                return false;
+            }
+        }
+        // body checks
+
         // horizontal ship
         if(s.getIsHorizontal()) {
-            if(!(s.getStartX()-1 < 0)) {
-                if(g.getCells()[s.getStartX()-1][s.getStartY()].hasShipP2()) {
-                    return false;
-                }  
-            }
-            if(!(s.getEndX()+1 >= Grid.GRID_SIZE)) {
-                if(g.getCells()[s.getStartX()+1][s.getStartY()].hasShipP2()) {
-                    return false;
-                }
-            }
-            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+            
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
                 if(g.getCells()[i][s.getStartY()].hasShipP2()) {
                     return false;
                 }
@@ -453,16 +462,7 @@ public class GameManager implements Runnable {
         }
         // vertical ship
         else {
-            if(!(s.getEndY()+1 >= Grid.GRID_SIZE)) {
-                if(g.getCells()[s.getStartX()][s.getEndY()+1].hasShipP2()) {
-                    return false;
-                }
-            }
-            if(!(s.getStartY()-1 < 0)) {
-                if(g.getCells()[s.getStartX()][s.getStartY()-1].hasShipP2()) {
-                    return false;
-                }
-            }
+            
             for (int i = s.getStartY(); i <= s.getEndY(); i++) {
                 if(g.getCells()[s.getStartX()][i].hasShipP2()) {
                     return false;
@@ -479,26 +479,34 @@ public class GameManager implements Runnable {
                 }
             }
         }
+
         return true;
     }
 
-    public static ArrayList<Ship> createAllP2Ships(Grid g) {
+    // creates and places all p2 ships
+    public ArrayList<Ship> createAllP2Ships(Grid g) {
         ArrayList <Ship> shipList = new ArrayList<>();
         // no need to check first ship since the board should be empty
-        shipList.add(new Ship(5));
+        Ship temp = new Ship(5);
+        shipList.add(temp);
+        placeShipP2(g, temp);
 
-        Ship temp = createValidShipP2(g, 4);
+        temp = createValidShipP2(g, 4);
         // i dont trust java
         shipList.add(new Ship(temp));
+        placeShipP2(g, temp);
 
         temp = createValidShipP2(g, 3);
         shipList.add(new Ship(temp));
+        placeShipP2(g, temp);
 
         temp = createValidShipP2(g, 3);
         shipList.add(new Ship(temp));
+        placeShipP2(g, temp);
 
         temp = createValidShipP2(g, 2);
         shipList.add(new Ship(temp));
+        placeShipP2(g, temp);
         
         
         return shipList;
@@ -511,19 +519,14 @@ public class GameManager implements Runnable {
             }
         }
         else {
-            for (int i = 0; i <= s.getEndY(); i++) {
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
                 g.getCells()[s.getStartX()][i].setShipP2(true);   
             }
         }
     }
 
-    public static void placeAllShipsP2(Grid g, ArrayList<Ship> s) {
-        for (int i = 0; i < s.size(); i++) {
-            placeShipP2(g, s.get(i));  
-        }
-    }
-
-    private static Ship createValidShipP2(Grid g, int size) {
+    // creates a valid p2 ship
+    private Ship createValidShipP2(Grid g, int size) {
         boolean isValidPlacement;
         Ship s;
         do {

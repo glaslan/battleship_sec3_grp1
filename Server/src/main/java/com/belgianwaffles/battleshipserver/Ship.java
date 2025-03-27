@@ -62,30 +62,30 @@ public class Ship {
         switch (this.mLength) {
         case 2:
             if (sLength2 == 0) {
-                throw new IllegalArgumentException();
+                //throw new IllegalArgumentException();
             }
             sLength2--;
             break;
         case 3:
             if (sLength3 == 0) {
-                throw new IllegalArgumentException();
+                //throw new IllegalArgumentException();
             }
             sLength3--;
             break;
         case 4:
             if (sLength4 == 0) {
-                throw new IllegalArgumentException();
+                //throw new IllegalArgumentException();
             }
             sLength4--;
             break;
         case 5:
             if (sLength5 == 0) {
-                throw new IllegalArgumentException();
+                //throw new IllegalArgumentException();
             }
             sLength5--;
             break;
         default:
-            throw new IllegalArgumentException();
+            //throw new IllegalArgumentException();
         }
 
         // Other variables
