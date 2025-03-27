@@ -628,8 +628,7 @@ public final class Grid {
     }
 
     // creates and places all p2 ships
-    public void createAllP2Ships() {
-        
+    private void createAllP2Ships() {  
 
         // no need to check first ship since the board should be empty
         Ship temp = new Ship(5);
