@@ -1,5 +1,7 @@
 package com.belgianwaffles.battleshipserver;
 
+import java.util.Random;
+
 public class Ship {
 
     // ----- Subclasses -----
@@ -16,7 +18,7 @@ public class Ship {
     private static int sLength5 = 1;
     
     private final Coordinate mStart, mEnd;
-    private final int mLength;
+    private int mLength;
     private final boolean mIsHorizontal;
     private final boolean[] mShotSpots;
 
@@ -90,7 +92,71 @@ public class Ship {
         this.mShotCount = 0;
         this.mShotSpots = new boolean[this.mLength];
     }
-    
+
+    public Ship(int sizeOfShip) {
+        Ship s = createRandomShip(sizeOfShip);
+        this.mEnd = s.mEnd;
+        this.mLength = s.mLength;
+        this.mShotCount = s.mShotCount;
+        this.mIsHorizontal = s.mIsHorizontal;
+        this.mStart = s.mStart;
+        this.mShotSpots = new boolean[this.mLength];
+    }
+
+    // this is needed because i dont trust java
+    public Ship(Ship s) {
+        this.mEnd = s.mEnd;
+       
+        this.mLength = s.mLength;
+        this.mShotCount = s.mShotCount;
+        this.mIsHorizontal = s.mIsHorizontal;
+        this.mStart = s.mStart;
+        this.mShotSpots = new boolean[this.mLength];
+    }
+
+    private Ship createRandomShip(int sizeOfShip) {
+        final Random rng = new Random(System.currentTimeMillis());
+
+        int index = rng.nextInt(0, Grid.GRID_SIZE * Grid.GRID_SIZE);
+        int x = index % Grid.GRID_SIZE;
+        int y = index / Grid.GRID_SIZE;
+        int xEnd;
+        int yEnd;
+        boolean IsHorizontal = rng.nextBoolean();
+
+        if (IsHorizontal) {
+            yEnd = y;
+            if(x+sizeOfShip-1 >= Grid.GRID_SIZE) {
+                
+                xEnd = x-(sizeOfShip-1);
+                // reorients so the lower x value is always the start
+                int temp = xEnd;
+                xEnd = x;
+                x = temp;
+            }
+            else {
+                xEnd = x+(sizeOfShip-1);
+            }
+            
+        }
+        else {
+            xEnd = x;
+            if(y+sizeOfShip-1 >= Grid.GRID_SIZE) {
+                yEnd = y-(sizeOfShip-1);
+                // reorients so the lower y value is always the start
+                int temp = yEnd;
+                yEnd = y;
+                y = temp;
+            }
+            else {
+                yEnd = y+(sizeOfShip-1);
+            }
+        }
+        Ship s = new Ship(x, y, xEnd, yEnd);
+        s.mLength = sizeOfShip;
+        return s;
+    }
+
 
 
     // ----- Read -----
