@@ -294,20 +294,26 @@ public class GameManager implements Runnable {
     public static ArrayList<Ship> createAllP1Ships(Grid g) {
         ArrayList <Ship> shipList = new ArrayList<>();
         // no need to check first ship since the board should be empty
-        shipList.add(new Ship(5));
+        Ship temp = new Ship(5);
+        shipList.add(temp);
+        placeShipP1(g, temp);
 
-        Ship temp = createValidShipP1(g, 4);
+        temp = createValidShipP1(g, 4);
         // i dont trust java
         shipList.add(new Ship(temp));
+        placeShipP1(g, temp);
 
         temp = createValidShipP1(g, 3);
         shipList.add(new Ship(temp));
+        placeShipP1(g, temp);
 
         temp = createValidShipP1(g, 3);
         shipList.add(new Ship(temp));
+        placeShipP1(g, temp);
 
         temp = createValidShipP1(g, 2);
         shipList.add(new Ship(temp));
+        placeShipP1(g, temp);
         
         
         return shipList;
@@ -387,7 +393,7 @@ public class GameManager implements Runnable {
             }
         }
         else {
-            for (int i = 0; i <= s.getEndY(); i++) {
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
                 g.getCells()[s.getStartX()][i].setShipP1(true);   
             }
         }

@@ -19,9 +19,6 @@ public class Main {
         // ik ik theyre all static this is just for testing
         shiplistp1 = GameManager.createAllP1Ships(g);
 
-        GameManager.placeAllShipsP1(g, shiplistp1);
-
-
         System.out.println(g);
 
         System.out.println("Ships:\n\n");
