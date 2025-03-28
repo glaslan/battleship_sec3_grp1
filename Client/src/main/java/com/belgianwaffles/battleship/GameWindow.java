@@ -268,7 +268,7 @@ public class GameWindow extends JFrame implements ActionListener {
             (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
 
 
-        this.startGame();
+        // this.startGame();
 
     }
 
@@ -287,7 +287,7 @@ public class GameWindow extends JFrame implements ActionListener {
         return false;
     }
 
-    
+
 
     // called whenever a JButton is clicked
     @Override
