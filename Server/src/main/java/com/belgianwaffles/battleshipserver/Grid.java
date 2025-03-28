@@ -248,7 +248,9 @@ public final class Grid {
 
     // ----- Constants -----
 
-    public static final int GRID_SIZE  = 10;
+    public static final int GRID_SIZE       = 10;
+    private static final byte GRID_CELL_P1  = (byte)0b11110000;
+    private static final byte GRID_CELL_P2  = (byte)0b00001111;
     
 
 
@@ -310,7 +312,7 @@ public final class Grid {
         // Combine cells
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
-                this.mCells[i][j] = new GridCell((byte)(g1.mCells[i][j].getCell() | g2.mCells[i][j].getCell()));
+                this.mCells[i][j] = new GridCell((byte)((g1.mCells[i][j].getCell() & GRID_CELL_P1) | (g2.mCells[i][j].getCell() & GRID_CELL_P2)));
             }
         }
     }
