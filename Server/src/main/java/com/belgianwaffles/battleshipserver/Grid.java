@@ -1,5 +1,7 @@
 package com.belgianwaffles.battleshipserver;
 
+import java.util.ArrayList;
+
 public final class Grid {
 
     // ----- Subclasses -----
@@ -10,9 +12,9 @@ public final class Grid {
 
         private static final byte MASK_ALL      = (byte)0b11111111;
         private static final byte MASK_SHARK_1  = (byte)0b10000000;
-        private static final byte MASK_SHARK_2  = (byte)0b01000000;
-        private static final byte MASK_SHIP_1   = (byte)0b00100000;
-        private static final byte MASK_SHOT_1   = (byte)0b00010000;
+        private static final byte MASK_SHIP_1   = (byte)0b01000000;
+        private static final byte MASK_SHOT_1   = (byte)0b00100000;
+        private static final byte MASK_SHARK_2  = (byte)0b00010000;
         private static final byte MASK_SHIP_2   = (byte)0b00001000;
         private static final byte MASK_SHOT_2   = (byte)0b00000100;
 
@@ -20,14 +22,7 @@ public final class Grid {
 
         // ----- Data -----
 
-        // first position:      is on fire
-        // second position:     has shark
-        // third position:      has ship p1
-        // fourth position      shot by p1
-        // fifth position:      has ship p2
-        // sixth position:      shot by p2
-        // seventh position:    nothing
-        // eighth position:     nothing
+        // If you want to know what the stuff means, refer to masks
         byte mCell;
 
 
@@ -260,7 +255,8 @@ public final class Grid {
     // ----- Data -----
 
     private GridCell[][] mCells;
-
+    private ArrayList <Ship> p1Ships;
+    private ArrayList <Ship> p2Ships;
 
 
     // ----- Methods -----
@@ -275,6 +271,8 @@ public final class Grid {
                 this.mCells[i][j] = new GridCell();
             }
         }
+        this.p1Ships = new ArrayList<>();
+        this.p2Ships = new ArrayList<>();
     }
     
     /**
@@ -309,7 +307,7 @@ public final class Grid {
      * @param g1 player 1's grid
      * @param g2 player 2's grid
      */
-    public void combine(Grid g1, Grid g2) {
+    public synchronized void combine(Grid g1, Grid g2) {
         // Translate grid
         g2.translateP1toP2();
         
@@ -322,23 +320,12 @@ public final class Grid {
     }
 
     /**
-     * Copies cell data so it can be changed outside of class without affecting actual grid
-     */
-    private GridCell[][] copyCells() {
-        GridCell[][] copy = new GridCell[GRID_SIZE][GRID_SIZE];
-        for (int i = 0; i < GRID_SIZE; i++) {
-            System.arraycopy(this.mCells[i], 0, copy[i], 0, GRID_SIZE);
-        }
-        return copy;
-    }
-
-    /**
-     * Gets a copy of the cell contents of the grid.
+     * Gets the cell contents of the grid.
      * Can create a new grid with the changed data.
      * @return 2D array with all gridcells
      */
     public GridCell[][] getCells() {
-        return this.copyCells();
+        return this.mCells;
     }
 
     /**
@@ -391,6 +378,26 @@ public final class Grid {
         }
         return diff;
     }
+
+    public int checkShipCount(int player) {
+        int shipsLeft = 0;
+        if (player == 1) {
+            for (int i = 0; i < p1Ships.size(); i++) {
+                if(!p1Ships.get(i).isSunk()) {
+                    shipsLeft++;
+                }
+            }
+            
+        }
+        else {
+            for (int i = 0; i < p2Ships.size(); i++) {
+                if(!p2Ships.get(i).isSunk()) {
+                    shipsLeft++;
+                }
+            }
+        }
+        return shipsLeft;
+    }
     
     /**
      * Removes all sharks from the grid
@@ -404,6 +411,297 @@ public final class Grid {
         }
     }
 
+
+
+    // ----- Ship ----- Creation -----
+
+    /**
+     * Randomly generates ships in the grid for player 1
+     */
+    public void generateShipsPlayer1() {
+        // Clear old ships
+        this.clearShipsPlayer1();
+
+        // Generate new ones
+        this.createAllP1Ships();
+    }
+
+    /**
+     * Randomly generates ships in the grid for player 2
+     */
+    public void generateShipsPlayer2() {
+        // Clear old ships
+        this.clearShipsPlayer2();
+
+        // Generate new ones
+        this.createAllP2Ships();
+    }
+
+    /**
+     * Removes old ships from grid so new ones can be added
+     */
+    private void clearShipsPlayer1() {
+        for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            this.mCells[i % GRID_SIZE][i / GRID_SIZE].setShipP1(false);
+        }
+        this.p1Ships.clear();
+    }
+
+    /**
+     * Removes old ships from grid so new ones can be added
+     */
+    private void clearShipsPlayer2() {
+        for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            this.mCells[i % GRID_SIZE][i / GRID_SIZE].setShipP2(false);
+        }
+        this.p2Ships.clear();
+    }
+    
+    
+    // Ship Generation Methods
+
+    // creates and places all p1 ships
+    private void createAllP1Ships() {
+        
+        // no need to check first ship since the board should be empty
+        Ship temp = new Ship(5);
+        this.p1Ships.add(temp);
+        this.placeShipP1(temp);
+
+        temp = createValidShipP1(4);
+        // i dont trust java
+        this.p1Ships.add(new Ship(temp));
+        this.placeShipP1(temp);
+
+        temp = createValidShipP1(3);
+        this.p1Ships.add(new Ship(temp));
+        this.placeShipP1(temp);
+
+        temp = createValidShipP1(3);
+        this.p1Ships.add(new Ship(temp));
+        this.placeShipP1(temp);
+
+        temp = createValidShipP1(2);
+        this.p1Ships.add(new Ship(temp));
+        this.placeShipP1(temp);
+    }
+
+    // im making two functions since this one is already huge
+    // checks for a valid placement for a p1 ship
+    private boolean shipPlacementIsAvailableP1(Ship s) {
+        // endpoint check
+        if(!(s.getStartX()-1 < 0)) {
+            if(this.mCells[s.getStartX()-1][s.getStartY()].hasShipP1()) {
+                return false;
+            }  
+        }
+        if(!(s.getEndX()+1 >= Grid.GRID_SIZE)) {
+            if(this.mCells[s.getEndX()+1][s.getStartY()].hasShipP1()) {
+                return false;
+            }
+        }
+        if(!(s.getEndY()+1 >= Grid.GRID_SIZE)) {
+            if(this.mCells[s.getStartX()][s.getEndY()+1].hasShipP1()) {
+                return false;
+            }
+        }
+        if(!(s.getStartY()-1 < 0)) {
+            if(this.mCells[s.getStartX()][s.getStartY()-1].hasShipP1()) {
+                return false;
+            }
+        }
+        // body checks
+
+        // horizontal ship
+        if(s.getIsHorizontal()) {
+            
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
+                if(this.mCells[i][s.getStartY()].hasShipP1()) {
+                    return false;
+                }
+                // prevents out of bounds checks
+                if(!(s.getStartY() == Grid.GRID_SIZE-1)) {
+                    if(this.mCells[i][s.getStartY()+1].hasShipP1()) {
+                        return false;
+                    }
+                }  
+                if(!(s.getStartY() == 0)) {
+                    if(this.mCells[i][s.getStartY()-1].hasShipP1()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+        // vertical ship
+        else {
+            
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                if(this.mCells[s.getStartX()][i].hasShipP1()) {
+                    return false;
+                }
+                if(!(s.getStartX() == Grid.GRID_SIZE-1)) {
+                    if(this.mCells[s.getStartX()+1][i].hasShipP1()) {
+                        return false;
+                    }  
+                }
+                if(!(s.getStartX() == 0)) {
+                    if(this.mCells[s.getStartX()-1][i].hasShipP1()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+        return true;
+    }
+
+    private void placeShipP1(Ship s) {
+        if(s.getIsHorizontal()) {
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
+                this.mCells[i][s.getStartY()].setShipP1(true);   
+            }
+        }
+        else {
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                this.mCells[s.getStartX()][i].setShipP1(true);   
+            }
+        }
+    }
+
+    // creates a valid p1 ship
+    private Ship createValidShipP1(int size) {
+        boolean isValidPlacement;
+        Ship s;
+        do {
+            s = new Ship(size);
+            isValidPlacement = this.shipPlacementIsAvailableP1(s);
+        } while(!isValidPlacement);
+        
+        return s;
+    }
+    
+    // checks for a valid placement for a p2 ship
+    private boolean shipPlacementIsAvailableP2(Ship s) {
+        // endpoint check
+        if(!(s.getStartX()-1 < 0)) {
+            if(this.mCells[s.getStartX()-1][s.getStartY()].hasShipP2()) {
+                return false;
+            }  
+        }
+        if(!(s.getEndX()+1 >= Grid.GRID_SIZE)) {
+            if(this.mCells[s.getEndX()+1][s.getStartY()].hasShipP2()) {
+                return false;
+            }
+        }
+        if(!(s.getEndY()+1 >= Grid.GRID_SIZE)) {
+            if(this.mCells[s.getStartX()][s.getEndY()+1].hasShipP2()) {
+                return false;
+            }
+        }
+        if(!(s.getStartY()-1 < 0)) {
+            if(this.mCells[s.getStartX()][s.getStartY()-1].hasShipP2()) {
+                return false;
+            }
+        }
+        // body checks
+
+        // horizontal ship
+        if(s.getIsHorizontal()) {
+            
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
+                if(this.mCells[i][s.getStartY()].hasShipP2()) {
+                    return false;
+                }
+                // prevents out of bounds checks
+                if(!(s.getStartY() == Grid.GRID_SIZE-1)) {
+                    if(this.mCells[i][s.getStartY()+1].hasShipP2()) {
+                        return false;
+                    }
+                }  
+                if(!(s.getStartY() == 0)) {
+                    if(this.mCells[i][s.getStartY()-1].hasShipP2()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+        // vertical ship
+        else {
+            
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                if(this.mCells[s.getStartX()][i].hasShipP2()) {
+                    return false;
+                }
+                if(!(s.getStartX() == Grid.GRID_SIZE-1)) {
+                    if(this.mCells[s.getStartX()+1][i].hasShipP2()) {
+                        return false;
+                    }  
+                }
+                if(!(s.getStartX() == 0)) {
+                    if(this.mCells[s.getStartX()-1][i].hasShipP2()) {
+                        return false;
+                    }    
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // creates and places all p2 ships
+    private void createAllP2Ships() {  
+
+        // no need to check first ship since the board should be empty
+        Ship temp = new Ship(5);
+        this.p2Ships.add(temp);
+        this.placeShipP2(temp);
+
+        temp = createValidShipP2(4);
+        // i dont trust java
+        this.p2Ships.add(new Ship(temp));
+        this.placeShipP2(temp);
+
+        temp = createValidShipP2(3);
+        this.p2Ships.add(new Ship(temp));
+        this.placeShipP2(temp);
+
+        temp = createValidShipP2(3);
+        this.p2Ships.add(new Ship(temp));
+        this.placeShipP2(temp);
+
+        temp = createValidShipP2(2);
+        this.p2Ships.add(new Ship(temp));
+        this.placeShipP2(temp);
+
+    }  
+
+    private void placeShipP2(Ship s) {
+        if(s.getIsHorizontal()) {
+            for (int i = s.getStartX(); i <= s.getEndX(); i++) {
+                this.mCells[i][s.getStartY()].setShipP2(true);   
+            }
+        }
+        else {
+            for (int i = s.getStartY(); i <= s.getEndY(); i++) {
+                this.mCells[s.getStartX()][i].setShipP2(true);   
+            }
+        }
+    }
+
+    // creates a valid p2 ship
+    private Ship createValidShipP2(int size) {
+        boolean isValidPlacement;
+        Ship s;
+        do {
+            s = new Ship(size);
+            isValidPlacement = this.shipPlacementIsAvailableP2(s);
+        } while(!isValidPlacement);
+        
+        return s;
+    }
+
+    
+    // ----- Extras -----
+
     /**
      * Gives a formatted grid string
      * @return A formatted, printable string
@@ -414,7 +712,7 @@ public final class Grid {
         
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
-                str += this.mCells[i][j].toString() + " ";
+                str += this.mCells[j][i].toString() + " ";
             }
             str += '\n';
         }

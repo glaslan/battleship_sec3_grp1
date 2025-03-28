@@ -408,9 +408,9 @@ public final class Grid {
         // Checks for lines
         if (x1 == x2) { vertical = true; }
         if (y1 == y2) {horizontal = true;}
-        
+
         // Ship is not in same column or row
-        if (!horizontal && !vertical) {
+        if (!(horizontal ^ vertical)) {
             return -1;
         }
         

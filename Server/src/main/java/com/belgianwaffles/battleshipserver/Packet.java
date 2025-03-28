@@ -235,7 +235,10 @@ public final class Packet {
 
     // ----- Grid ----- Flags -----
     
-    public static final byte PACKET_TURN_TRUE       = 1;
+    public static final byte PACKET_TURN_TRUE       = (byte)0b00000001;
+    public static final byte PACKET_FLAG_REFRESH    = (byte)0b10000000;
+    public static final byte PACKET_FLAG_CONFIRM    = (byte)0b01000000;
+    public static final byte PACKET_FLAG_SHIP_SUNK  = (byte)0b00100000;
 
     // ----- Flags ----- Flags -----
 
