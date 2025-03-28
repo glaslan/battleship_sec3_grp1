@@ -293,6 +293,46 @@ public class GameManager implements Runnable {
     
     
     // ----- Start ----- End -----
+
+    /**
+     * Allows client to get a grid to begin the game
+     * @param client the client socket to check
+     * @param player the player number, either 1 or 2
+     */
+    private void getPlayerGrid(Socket client, int player) {
+        Packet packet = null;
+        while (this.play() && packet == null) {
+            // Find the grid packet from client
+            packet = this.findPacket(client, Packet.PACKET_TYPE_GRID);
+            if (packet == null) {
+                continue;
+            }
+
+            // Check for refresh
+            if (packet.hasFlag(Packet.PACKET_FLAG_REFRESH)) {
+                // Send another board
+                Grid g = new Grid();
+                g.generateShipsPlayer1();
+                packet.serialize(g);
+                ConnectionManager.sendPacket(client, packet);
+                packet = null;
+                continue;
+                
+            }
+            
+            // Grid confirmed
+            if (packet.hasFlag(Packet.PACKET_FLAG_CONFIRM)) {
+                Grid g = packet.getGrid();
+                // Change grid based on player number
+                if (player == 1) {
+                    this.mGrid.combine(g, this.mGrid);
+                }
+                else {
+                    this.mGrid.combine(this.mGrid, g);
+                }
+            }
+        }
+    }
     
     /**
      * Sets up game and sends some packets to clients with board information
@@ -319,81 +359,46 @@ public class GameManager implements Runnable {
         receiveThreadP2.start();
 
         // Setup game states
-        Packet packet = new Packet();
-        packet.serialize(this.mGrid);
+        Packet packetGrid1 = new Packet();
+        Packet packetGrid2 = new Packet();
+        Grid gridGenerated1 = new Grid();
+        Grid gridGenerated2 = new Grid();
+        gridGenerated1.generateShipsPlayer1();
+        gridGenerated2.generateShipsPlayer1();
+        packetGrid1.serialize(gridGenerated1);
+        packetGrid2.serialize(gridGenerated2);
 
         // Send packets, end game if fail
-        if (!ConnectionManager.sendPacket(this.mClient1, packet)) {
+        if (!ConnectionManager.sendPacket(this.mClient1, packetGrid1)) {
             this.mGameOver = true;
         }
 
-        if (!ConnectionManager.sendPacket(this.mClient2, packet)) {
+        if (!ConnectionManager.sendPacket(this.mClient2, packetGrid2)) {
             this.mGameOver = true;
         }
 
         // Receive packets with grid data
-        Packet p1 = null, p2 = null;
-        while (this.play() && p1 == null) {
-            p1 = this.findPacket(this.mClient1, Packet.PACKET_TYPE_GRID);
-            if (p1 == null) {
-                continue;
-            }
 
-            // Check flags
-            if (p1.hasFlag(Packet.PACKET_FLAG_REFRESH)) {
-                // Send another board
-                Grid g = new Grid();
-                g.generateShipsPlayer1();
-                packet.serialize(g);
-                ConnectionManager.sendPacket(this.mClient1, packet);
-                p1 = null;
-                continue;
-                
-            }
-            
-            // Grid confirmed
-            if (p1.hasFlag(Packet.PACKET_FLAG_CONFIRM)) {
-                Grid g = p1.getGrid();
-                this.mGrid.combine(g, this.mGrid);
-            }
-        }
-        while (this.play() && p2 == null) {
-            p2 = this.findPacket(this.mClient2, Packet.PACKET_TYPE_GRID);
-            if (p2 == null) {
-                continue;
-            }
-    
-            // Check flags
-            if (p2.hasFlag(Packet.PACKET_FLAG_REFRESH)) {
-                // Send another board
-                Grid g = new Grid();
-                g.generateShipsPlayer2();
-                packet.serialize(g);
-                ConnectionManager.sendPacket(this.mClient2, packet);
-                p2 = null;
-                continue;
-            }
-            
-            // Grid confirmed
-            if (p2.hasFlag(Packet.PACKET_FLAG_CONFIRM)) {
-                Grid g = p2.getGrid();
-                g.translateP1toP2();
-                this.mGrid.combine(this.mGrid, g);
-            }
-        }
+        // Create runnables
+        Runnable getGridP1 = () -> {
+            this.getPlayerGrid(this.mClient1, 1);
+        };
+        Runnable getGridP2 = () -> {
+            this.getPlayerGrid(this.mClient2, 2);
+        };
 
-        // Check game over
-        if (!this.play()) {
-            return;
-        }
+        // Setup threads
+        Thread checkGridP1 = new Thread(getGridP1);
+        checkGridP1.start();
+        Thread checkGridP2 = new Thread(getGridP2);
+        checkGridP2.start();
 
+        // Join the threads to ensure completion
         try {
-            // Combine grids into one
-            this.mGrid.combine(p1.getGrid(), p2.getGrid());
-        } catch (IllegalStateException e) {
-            FileLogger.logError(GameManager.class, "startGame()", "Failed to parse grid from client");
-            System.err.println("Failed to parse grid from client");
-            this.mGameOver = true;
+            checkGridP1.join();
+            checkGridP2.join();
+        } catch (InterruptedException e) {
+            System.err.println("Thread was interrupted");
         }
     }
     
