@@ -378,6 +378,26 @@ public final class Grid {
         }
         return diff;
     }
+
+    public int checkShipCount(int player) {
+        int shipsLeft = 0;
+        if (player == 1) {
+            for (int i = 0; i < p1Ships.size(); i++) {
+                if(!p1Ships.get(i).isSunk()) {
+                    shipsLeft++;
+                }
+            }
+            
+        }
+        else {
+            for (int i = 0; i < p2Ships.size(); i++) {
+                if(!p2Ships.get(i).isSunk()) {
+                    shipsLeft++;
+                }
+            }
+        }
+        return shipsLeft;
+    }
     
     /**
      * Removes all sharks from the grid

@@ -131,6 +131,7 @@ public class GameManager implements Runnable {
     
     // ----- Game ----- Methods -----
     
+    // now obsolete from Grid.checkShipsCount()?
     /**
      * Checks for how many ships are left in the grid
      * @return number of ships remaining
