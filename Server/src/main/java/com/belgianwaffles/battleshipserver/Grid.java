@@ -303,14 +303,10 @@ public final class Grid {
     
     /**
      * Allows for the combination of 2 grids into 1.
-     * Converts g2 into second player data in grid.
      * @param g1 player 1's grid
      * @param g2 player 2's grid
      */
     public synchronized void combine(Grid g1, Grid g2) {
-        // Translate grid
-        g2.translateP1toP2();
-        
         // Combine cells
         for (int i = 0; i < GRID_SIZE; i++) {
             for (int j = 0; j < GRID_SIZE; j++) {
@@ -710,9 +706,9 @@ public final class Grid {
     public String toString() {
         String str = "";
         
-        for (int i = 0; i < GRID_SIZE; i++) {
-            for (int j = 0; j < GRID_SIZE; j++) {
-                str += this.mCells[j][i].toString() + " ";
+        for (int y = 0; y < GRID_SIZE; y++) {
+            for (int x = 0; x < GRID_SIZE; x++) {
+                str += this.mCells[x][y].toString();
             }
             str += '\n';
         }

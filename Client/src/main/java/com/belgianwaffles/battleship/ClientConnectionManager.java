@@ -79,17 +79,17 @@ public class ClientConnectionManager implements Runnable{
 
     public void sendGridRefreshRequest(Grid grid) throws IOException {
         Packet packet = new Packet();
-        packet.serialize(grid);
         packet.addFlag(Packet.PACKET_FLAG_REFRESH);
-
+        packet.serialize(grid);
+        
         var output = new DataOutputStream(connectionSocket.getOutputStream());
         output.write(packet.getBuffer());
     }
-
+    
     public void sendGridReadyRequest(Grid grid) throws IOException {
         Packet packet = new Packet();
-        packet.serialize(grid);
         packet.addFlag(Packet.PACKET_FLAG_CONFIRM);
+        packet.serialize(grid);
 
         var output = new DataOutputStream(connectionSocket.getOutputStream());
         output.write(packet.getBuffer());

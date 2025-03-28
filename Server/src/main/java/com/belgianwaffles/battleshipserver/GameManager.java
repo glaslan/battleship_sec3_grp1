@@ -333,7 +333,7 @@ public class GameManager implements Runnable {
 
         // Receive packets with grid data
         Packet p1 = null, p2 = null;
-        while (p1 == null && this.play()) {
+        while (this.play() && p1 == null) {
             p1 = this.findPacket(this.mClient1, Packet.PACKET_TYPE_GRID);
             if (p1 == null) {
                 continue;
@@ -345,8 +345,10 @@ public class GameManager implements Runnable {
                 Grid g = new Grid();
                 g.generateShipsPlayer1();
                 packet.serialize(g);
-                ConnectionManager.sendPacket(mClient1, packet);
+                ConnectionManager.sendPacket(this.mClient1, packet);
+                p1 = null;
                 continue;
+                
             }
             
             // Grid confirmed
@@ -355,7 +357,7 @@ public class GameManager implements Runnable {
                 this.mGrid.combine(g, this.mGrid);
             }
         }
-        while (p2 == null && this.play()) {
+        while (this.play() && p2 == null) {
             p2 = this.findPacket(this.mClient2, Packet.PACKET_TYPE_GRID);
             if (p2 == null) {
                 continue;
@@ -367,13 +369,15 @@ public class GameManager implements Runnable {
                 Grid g = new Grid();
                 g.generateShipsPlayer2();
                 packet.serialize(g);
-                ConnectionManager.sendPacket(mClient1, packet);
+                ConnectionManager.sendPacket(this.mClient2, packet);
+                p2 = null;
                 continue;
             }
             
             // Grid confirmed
             if (p2.hasFlag(Packet.PACKET_FLAG_CONFIRM)) {
                 Grid g = p2.getGrid();
+                g.translateP1toP2();
                 this.mGrid.combine(this.mGrid, g);
             }
         }
@@ -385,9 +389,7 @@ public class GameManager implements Runnable {
 
         try {
             // Combine grids into one
-            Grid p1Grid = p1.getGrid();
-            Grid p2Grid = p2.getGrid();
-            this.mGrid.combine(p1Grid, p2Grid);
+            this.mGrid.combine(p1.getGrid(), p2.getGrid());
         } catch (IllegalStateException e) {
             FileLogger.logError(GameManager.class, "startGame()", "Failed to parse grid from client");
             System.err.println("Failed to parse grid from client");
