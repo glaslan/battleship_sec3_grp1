@@ -103,11 +103,13 @@ public class GameManager implements Runnable {
                 }
 
                 // Update grid
-                if (!this.mCurrentPlayerIsOne) {
-                    grid.translateP1toP2();
+                if (this.mCurrentPlayerIsOne) {
+                    this.mGrid.combine(grid, this.mGrid);
                 }
-                this.mGrid.combine(this.mGrid, grid);
-                this.generateSugarSharks();
+                else {
+                    this.mGrid.combine(this.mGrid, grid);
+                    this.generateSugarSharks();
+                }
             }
 
             // Do some stuff with sendsing
