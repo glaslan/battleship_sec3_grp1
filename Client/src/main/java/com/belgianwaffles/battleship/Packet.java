@@ -44,16 +44,34 @@ public final class Packet {
          */
         public Header() {
             this.mData = new byte[HEADER_SIZE];
+            this.addType(PACKET_TYPE_NONE);
         }
 
+        /**
+         * Copies data into header
+         * @param bytes the bytes to put into the packet header
+         */
         public void copy(byte[] bytes) {
-            System.arraycopy(bytes, 0, this.mData, 0, HEADER_SIZE);
+            try {
+                // Copy data into header
+                System.arraycopy(bytes, 0, this.mData, 0, HEADER_SIZE);
+            }
+            // No out of bounds crashes today
+            catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println("Out of bounds index passed to header");
+            }
         }
         
         
         
         // ----- Bit ----- Manipulators -----
         
+        /**
+         * Manipulates specified bits in header
+         * @param byteNum the index in the header, use defined values
+         * @param mask the mask for the header item, use defined values
+         * @param newData the new data to put into the byte
+         */
         private void bitManipulate(int byteNum, byte mask, byte newData) {
             this.mData[byteNum] |= mask & newData;
         }
@@ -175,11 +193,16 @@ public final class Packet {
             return this.mData;
         }
 
+        /**
+         * Packages the packet into a nicely formatted string
+         * @return String of printableness
+         */
         @Override
         public String toString() {
             // Packet type
             String str = "Packet type: ";
             switch (this.getType()) {
+                case PACKET_TYPE_NONE -> str += "None";
                 case PACKET_TYPE_PING -> str += "Ping";
                 case PACKET_TYPE_GRID -> str += "Grid";
                 case PACKET_TYPE_IMAGE-> str += "Image";
@@ -255,7 +278,6 @@ public final class Packet {
 
     /**
      * Creates an empty data packet
-     * @param None
      */
     public Packet() {
         this.mHeader = new Header();
@@ -318,7 +340,6 @@ public final class Packet {
 
     /**
      * Serializes a ping packet
-     * @param None
      */
     public void serialize() {
         // Setup header
@@ -326,12 +347,11 @@ public final class Packet {
         
         // Setup body, empty but not null
         this.mBody = new byte[1];
-        this.setByte(0, (byte)0);
         
         // Pack data to packet
         this.pack();
     }
-    
+
     /**
      * Serialized a game over packet
      * @param isWinner true if this player is the winner, false if they are not
@@ -351,7 +371,7 @@ public final class Packet {
 
     /**
      * Serializes a grid packet for game information
-     * @param None
+     * @param grid the grid to serialize into the packet
      */
     public void serialize(Grid grid) {
         // Setup header
@@ -460,7 +480,7 @@ public final class Packet {
     
     /**
      * Gets the current players turn type
-     * @return which players turn it is. Check with PACKET_TURN_P(ONE/TWO)
+     * @return if it is your turn to play
      */
     public boolean isTurn() {
         return this.mHeader.isTurn();
@@ -522,6 +542,7 @@ public final class Packet {
     public String toString() {
         String str = this.mHeader.toString();
         switch (this.getType()) {
+            case PACKET_TYPE_NONE -> str += this.noneString();
             case PACKET_TYPE_PING -> str += this.pingString();
             case PACKET_TYPE_GRID -> str += this.gridString();
             case PACKET_TYPE_IMAGE-> str += this.assetString();
@@ -529,15 +550,36 @@ public final class Packet {
         return str;
     }
 
-    private String pingString() {
+    /**
+     * Formatted string for packet of type none
+     * @return string for none
+     */
+    private String noneString() {
         // Nothing todo
         return "";
     }
 
+    /**
+     * Formatted string for packet of type ping
+     * @return string for ping
+     */
+    private String pingString() {
+        // Nothing todo
+        return "";
+    }
+    
+    /**
+     * Formatted string for packet of type grid
+     * @return string for grid
+     */
     private String gridString() {
         return this.getGrid().toString();
     }
-
+    
+    /**
+     * Formatted string for packet of type image
+     * @return string for image
+     */
     private String assetString() {
         String str = "Sent icon of type: ";
         if (this.hasFlag(PACKET_FLAG_WATER)) {

@@ -10,6 +10,7 @@ public class Main {
         // Holds the whole program together
         System.out.println("Heyo!");
 
+        
         // initialize logger
         FileLogger.initLogger();
 
