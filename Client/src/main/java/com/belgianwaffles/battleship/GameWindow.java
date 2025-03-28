@@ -331,7 +331,7 @@ public class GameWindow extends JFrame implements ActionListener {
     
 
     // sets game to board screen
-    private void setBoardScreen() {
+    private void setBoardScreen(Grid grid) {
 
         // remove all elements from screen and add ready and refresh buttons
         clearScreen();
@@ -349,7 +349,7 @@ public class GameWindow extends JFrame implements ActionListener {
 
         // load images for tile assets
         tileImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "CoffeeTile.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
-        shipImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "Ship.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
+        shipImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ShipTile.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         shipShotImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ShipShot.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         missImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "Miss.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         sugarSharkImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "SugarShark.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
@@ -381,6 +381,7 @@ public class GameWindow extends JFrame implements ActionListener {
             }
         }
 
+        updatePlayerBoard(grid);
         resize();
     }
 
@@ -458,19 +459,43 @@ public class GameWindow extends JFrame implements ActionListener {
     }
 
     // starts game
-    public void startGame() {
+    public void startGame(Grid grid) {
         clientTurn = false;
         inGame = true;
-        setBoardScreen();
+        setBoardScreen(grid);
         resize();
     }
 
     // ends game
-    public void endGame() {
-        clearScreen();
-        l_title.setVisible(true);
-        b_Connect.setVisible(true);
-        b_Exit.setVisible(true);
+    public void endGame(boolean winner) {
+
+        if (winner) {
+            l_turnDisplay.setText("You Win!");
+        }
+        else {
+            l_turnDisplay.setText("You Lose!");
+        }
+        
+        Timer onRefresh;
+        onRefresh = new Timer((int)(3000), 
+                
+                // calls every time timer refreshes (once per refreshRate/1000)
+                new ActionListener() {
+                    
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+
+                        clearScreen();
+                        l_title.setVisible(true);
+                        b_Connect.setVisible(true);
+                        b_Exit.setVisible(true);
+
+        }}); // end timer();
+
+        onRefresh.setRepeats(false);
+        onRefresh.start();
+       
+        
     }
 
     // returns if client is in game

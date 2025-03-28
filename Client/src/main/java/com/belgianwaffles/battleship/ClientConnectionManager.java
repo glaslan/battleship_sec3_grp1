@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
+import com.belgianwaffles.battleship.Grid;
 import com.belgianwaffles.battleship.Grid.GridCell;
+import com.belgianwaffles.battleship.Packet;
 
 public class ClientConnectionManager implements Runnable{
 
@@ -46,6 +48,7 @@ public class ClientConnectionManager implements Runnable{
                 switch (packet.getType()) {
                     case Packet.PACKET_TYPE_PING -> this.pingServer();
                     case Packet.PACKET_TYPE_GRID -> this.getGridPacket(packet);
+                    case Packet.PACKET_TYPE_FLAGS -> this.getFlags(packet);
                 }
             } catch (IOException e) {
                 break;
@@ -57,9 +60,11 @@ public class ClientConnectionManager implements Runnable{
 
         Grid grid = packet.getGrid();
         boolean turn = packet.isTurn();
+        System.out.println(grid);
+        
 
         if (!game.isGameStarted()) {
-            game.startGame();
+            game.startGame(grid);
         }
         game.setTurn(turn);
         GridCell[][] cells = grid.getCells();
@@ -94,6 +99,19 @@ public class ClientConnectionManager implements Runnable{
         var output = new DataOutputStream(connectionSocket.getOutputStream());
         output.write(packet.getBuffer());
     }
+
+    public void getFlags(Packet packet) {
+
+        if (packet.hasFlag(Packet.PACKET_FLAG_WINNER)) {
+            game.endGame(true);
+        }
+        else if (true) {
+            
+        }
+
+    }
+
+
     
     /**
      * Awaits and receives a packet from the server
