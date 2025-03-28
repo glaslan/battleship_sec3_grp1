@@ -29,6 +29,7 @@ public class ClientConnectionManager implements Runnable{
         try {
             connectionSocket = new Socket("localhost", DEFAULT_PORT);
             System.out.println("Connection Established");
+            game.waitScreen();
         } catch (IOException e) {
             System.out.print("Switch to Bell");
             return;
@@ -57,8 +58,6 @@ public class ClientConnectionManager implements Runnable{
         Grid grid = packet.getGrid();
         boolean turn = packet.isTurn();
 
-        System.out.println("Got the griddy");
-
         if (!game.isGameStarted()) {
             game.startGame();
         }
@@ -73,6 +72,24 @@ public class ClientConnectionManager implements Runnable{
     public void sendGridToServer(Grid grid) throws IOException {
         Packet packet = new Packet();
         packet.serialize(grid);
+
+        var output = new DataOutputStream(connectionSocket.getOutputStream());
+        output.write(packet.getBuffer());
+    }
+
+    public void sendGridRefreshRequest(Grid grid) throws IOException {
+        Packet packet = new Packet();
+        packet.serialize(grid);
+        packet.addFlag(Packet.PACKET_FLAG_REFRESH);
+
+        var output = new DataOutputStream(connectionSocket.getOutputStream());
+        output.write(packet.getBuffer());
+    }
+
+    public void sendGridReadyRequest(Grid grid) throws IOException {
+        Packet packet = new Packet();
+        packet.serialize(grid);
+        packet.addFlag(Packet.PACKET_FLAG_CONFIRM);
 
         var output = new DataOutputStream(connectionSocket.getOutputStream());
         output.write(packet.getBuffer());

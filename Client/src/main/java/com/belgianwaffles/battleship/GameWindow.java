@@ -1,7 +1,9 @@
 package com.belgianwaffles.battleship;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -20,20 +22,38 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
 
 import com.belgianwaffles.battleship.Grid.GridCell;
 
 public class GameWindow extends JFrame implements ActionListener {
 
-    private JLabel b_Connect;
+    // window specfic constants
+    private int REFRESH_RATE = 10;
+    private int LOADING_DISPLAY_DELAY = 50;
+    private int SELECTED_BORDER_WIDTH = 4;
+
+    // button definitions
+    private JButton b_Connect;
     private JButton b_Exit;
+    private JButton b_Refresh;
+    private JButton b_Ready;
+
+    // label definitions
     private JLabel[][] playerBoardButtons;
     private JLabel[][] opponentBoardButtons;
-
     private JLabel l_title;
-    private Grid board;
+    private JLabel l_wait;
+    private JLabel l_turnDisplay;
 
+    // board panel definitions
+    private JPanel playerBoard = new JPanel();
+    private JPanel opBoard = new JPanel();
+
+
+    // image definitions
     private AssetImage tileImg;
     private AssetImage shipImg;
     private AssetImage shipShotImg;
@@ -41,18 +61,20 @@ public class GameWindow extends JFrame implements ActionListener {
     private AssetImage sugarSharkImg;
     private AssetImage shotImg;
 
+    // game variables
+    private Grid board;
     private boolean clientTurn;
     private boolean inGame;
     private boolean isTurn;
-
     private ClientConnectionManager connection;
+    private int frameCounter = 0;
 
+    // game window component lists
     private ArrayList<WindowComponent> elements = new ArrayList<>();
     private ArrayList<AssetImage> loadedImages = new ArrayList<>();
 
-    private JPanel playerBoard = new JPanel();
-    private JPanel opBoard = new JPanel();
-
+    
+    // component size definitions
     private float widthRatio = (10.0f / 16.0f);
     private float boardHeight = 0.6f;
     private float boardWidth = boardHeight * widthRatio;
@@ -61,6 +83,7 @@ public class GameWindow extends JFrame implements ActionListener {
     private float firstBoardPosition = 0.05f;
     private float secondBoardPosition = 0.55f;
     private float offsetY = 0.05f;
+
 
     // for removing clutter in the constructor
     private void buttonInit(JButton button, double x_bound, double y_bound, double width, double height) {
@@ -74,6 +97,7 @@ public class GameWindow extends JFrame implements ActionListener {
         elements.add(new WindowComponent(button, x_bound, y_bound, width, height));
     }
 
+    // for removing clutter in the constructor
     private void componentInit(JComponent component, double x_bound, double y_bound, double width, double height) {
 
         component.setBounds((int) (x_bound * Constants.WINDOW_WIDTH), (int) (y_bound * Constants.WINDOW_HEIGHT),
@@ -85,49 +109,13 @@ public class GameWindow extends JFrame implements ActionListener {
 
     }
 
-    private boolean clicked(WindowComponent element, Point p) {
-
-        // check if within x
-        if (p.getX() >= getWindowXPosition(element.getBoundX()) &&
-                p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
-                p.getY() >= getWindowYPosition(element.getBoundY()) &&
-                p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) {
-            return true;
-
-        }
-        return false;
-    }
-
-    private int getWindowXPosition(double relative) {
-        return (int) (relative * getWidth());
-    }
-
-    private int getWindowYPosition(double relative) {
-        return (int) (relative * getHeight());
-    }
-
     // all images must use this function or else they will not be scaled when screen
     // resized
     private void imageInit(AssetImage img) {
         loadedImages.add(img);
     }
 
-    private WindowComponent getWindowComponent(JComponent element) {
-        for (WindowComponent e : elements) {
-            if (e.getComponent().equals(element)) {
-                return e;
-            }
-        }
-
-        return null;
-    }
-
-    public void clearScreen() {
-        for (WindowComponent c : elements) {
-            c.setVisible(false);
-        }
-    }
-
+    // constructor
     public GameWindow() {
 
         this.setLayout(null);
@@ -137,31 +125,54 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.inGame = false;
 
-        // Buttons
-        AssetImage test = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ThisBeAnAsset.png"), 0.6, 0.15,
-                Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
-        imageInit(test);
-
-        b_Connect = new JLabel(test);
-        componentInit(b_Connect, 0.05, 0.8, 0.4, 0.15);
+        /////// Buttons ////////
+        b_Connect = new JButton("Connect");
+        b_Connect.setBorder(BorderFactory.createLineBorder(Color.black, 10));
+        b_Connect.setFont(new Font("Aerial", Font.PLAIN, 60));
+        buttonInit(b_Connect, 0.25, 0.6, 0.5, 0.15);
         b_Connect.setVisible(true);
 
-        b_Exit = new JButton(test);
-        buttonInit(b_Exit, 0.55, 0.8, 0.4, 0.15);
+        b_Exit = new JButton("Exit");
+        b_Exit.setBorder(BorderFactory.createLineBorder(Color.black, 10));
+        b_Exit.setFont(new Font("Aerial", Font.PLAIN, 60));
+        buttonInit(b_Exit, 0.25, 0.8, 0.5, 0.15);
         b_Exit.setVisible(true);
 
-        // JLabels
-        l_title = new JLabel("Battleship");
-        componentInit(l_title, 0.3, 0.7, 0.4, 0.1);
-        l_title.setVisible(true);
-        l_title.setBorder(BorderFactory.createLineBorder(Color.black));
+        b_Refresh = new JButton("Refresh");
+        b_Refresh.setBorder(BorderFactory.createLineBorder(Color.black, 10));
+        b_Refresh.setFont(new Font("Aerial", Font.PLAIN, 24));
+        buttonInit(b_Refresh, boardXBound + (boardWidth/4), 0.75, boardWidth / 2, 0.1);
 
-        // Clickables
-        b_Connect = new JLabel("Connect");
-        componentInit(b_Connect, 0.2, 0.7, 0.6, 0.15);
-        b_Connect.setBorder(BorderFactory.createLineBorder(Color.black));
-        b_Connect.setBackground(Color.BLUE);
-        b_Connect.setVisible(true);
+        b_Ready = new JButton("Ready");
+        b_Ready.setBorder(BorderFactory.createLineBorder(Color.black, 10));
+        b_Ready.setFont(new Font("Aerial", Font.PLAIN, 24));
+        buttonInit(b_Ready, 1 - (boardXBound + boardWidth) + (boardWidth/4), 0.75, boardWidth / 2, 0.1);
+
+
+        playerBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
+        opponentBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
+        for (int x = 0; x < Constants.BOARD_DIMENSIONS; x++) {
+        for (int y = 0; y < Constants.BOARD_DIMENSIONS; y++) {
+            opponentBoardButtons[x][y] = new JLabel();
+            playerBoardButtons[x][y] = new JLabel();
+        }}
+
+
+
+
+        /////// Labels ////////
+        l_title = new JLabel("Battleship", SwingConstants.CENTER);
+        componentInit(l_title, 0.1, 0.1, 0.8, 0.2);
+        l_title.setVisible(true);
+        l_title.setFont(new Font("Aerial", Font.BOLD, 100));
+
+        l_wait = new JLabel("Waiting for Opponent", SwingConstants.CENTER);
+        componentInit(l_wait, 0.1, 0.35, 0.8, 0.3);
+        l_wait.setFont(new Font("Aerial", Font.BOLD, 120));
+
+        l_turnDisplay = new JLabel("Waiting for Opponent", SwingConstants.CENTER);
+        componentInit(l_turnDisplay, 0.1, 0.75, 0.8, 0.1);
+        l_turnDisplay.setFont(new Font("Aerial", Font.BOLD, 100));
 
         getContentPane().addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
@@ -169,42 +180,88 @@ public class GameWindow extends JFrame implements ActionListener {
             }
         });
 
+        /////// Mouse Listener ////////
         this.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mousePressed(MouseEvent e) {
 
-                if (clicked(getWindowComponent(b_Connect), e.getPoint())) {
-                    connectToServer();
-                }
-                
-
+                // if player is in game and its their turn, check to see if they have clicked a tile that has not been shot to shoot
                 if (inGame && isTurn) {
                     for (int x = 0; x < Constants.BOARD_DIMENSIONS; x++) {
-                        for (int y = 0; y < Constants.BOARD_DIMENSIONS; y++) {
+                    for (int y = 0; y < Constants.BOARD_DIMENSIONS; y++) {
 
-                            if (e.getPoint().getX() >= (boardXBound + (x * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
-                                e.getPoint().getX() < (boardXBound + ((x + 1) * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
-                                e.getPoint().getY() >= (boardYBound + (y * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight() &&
-                                e.getPoint().getY() < (boardYBound + ((y + 1) * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight()) 
-                            {
-                                GridCell[][] cells = board.getCells();
-                                if (!cells[x][y].hasShotP1()) {
-                                    cells[x][y].setShotP1(true);
-                                    Grid updated = new Grid(cells);
-                                    try {
-                                        connection.sendGridToServer(updated);
-                                    } catch (IOException bozo) {}
-                                    setTurn(false);
-                                }
-                                System.out.println(x+", "+y);
+                        // get location of mouse click
+                        if (e.getPoint().getX() >= (boardXBound + (x * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                            e.getPoint().getX() < (boardXBound + ((x + 1) * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                            e.getPoint().getY() >= (boardYBound + (y * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight() &&
+                            e.getPoint().getY() < (boardYBound + ((y + 1) * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight()) 
+                        {
+
+                            //get gridcells
+                            GridCell[][] cells = board.getCells();
+
+                            // shoot grid and send to server, also setTurn to false
+                            if (!cells[x][y].hasShotP1()) {
+                                cells[x][y].setShotP1(true);
+                                Grid updated = new Grid(cells);
+                                try {
+                                    connection.sendGridToServer(updated);
+                                } catch (IOException bozo) {}
+                                setTurn(false);
                             }
-                        }
-                    }
-                }
+                            System.out.println(x+", "+y);
+        }}}}}}); // end addMouseListener();
 
-            }
-        });
+        Timer onRefresh;
+        onRefresh = new Timer((int)(REFRESH_RATE), 
+                
+                // calls every time timer refreshes (once per refreshRate/1000)
+                new ActionListener() {
+                    
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+
+
+                        // change waiting for opponent display
+                        // makes for the tiny animation of the dots going from . .. ...
+                        frameCounter++;
+                        l_wait.setText("Waiting for Opponent.");
+                        if (frameCounter >= LOADING_DISPLAY_DELAY) {
+                            l_wait.setText("Waiting for Opponent..");
+                        }
+                        if (frameCounter >= LOADING_DISPLAY_DELAY * 2) {
+                            l_wait.setText("Waiting for Opponent...");
+                        }
+                        if (frameCounter >= LOADING_DISPLAY_DELAY * 3) {
+                            frameCounter = 0;
+                        }
+
+
+                        // highlight hovered tile
+                        resetBorders();
+                        if (true) {
+
+                            // get mouses current position
+                            Point mousePosition = MouseInfo.getPointerInfo().getLocation();
+                            for (int y = 0; y < Constants.BOARD_DIMENSIONS; y++) {
+                                for (int x = 0; x < Constants.BOARD_DIMENSIONS; x++) {
+
+                                    // check if mouse hovered over tile
+                                    if (mousePosition.getX() >= (boardXBound + (x * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                                        mousePosition.getX() < (boardXBound + ((x + 1) * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                                        mousePosition.getY() >= (boardYBound + (y * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight() &&
+                                        mousePosition.getY() < (boardYBound + ((y + 1) * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight()) 
+                                    {
+                                        // set border color to blue
+                                        opponentBoardButtons[y][x].setBorder(BorderFactory.createLineBorder(Color.blue, SELECTED_BORDER_WIDTH));
+                                    }
+                                    // set border to default
+                                    else {opponentBoardButtons[y][x].setBorder(BorderFactory.createLineBorder(Color.black));
+        }}}}}}); // end timer();
+        onRefresh.start();
+
+
 
         clientTurn = false;
         this.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
@@ -215,44 +272,73 @@ public class GameWindow extends JFrame implements ActionListener {
 
     }
 
+
+    // used to check if a JLabel has been clicked on
+    private boolean clicked(WindowComponent element, Point p) {
+
+        // check if within labels area
+        if (p.getX() >= getWindowXPosition(element.getBoundX()) &&
+                p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
+                p.getY() >= getWindowYPosition(element.getBoundY()) &&
+                p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) {
+            return true;
+
+        }
+        return false;
+    }
+
+    
+
+    // called whenever a JButton is clicked
     @Override
     public void actionPerformed(ActionEvent e) {
 
-    }
+        // Connect
+        if (e.getSource().equals(b_Connect)) {
+            connectToServer();
+        }
 
-    public void startGame() {
-        System.out.println("Game Started");
-        clientTurn = false;
-        inGame = true;
-        addBoardButtons();
-        resize();
-    }
+        // Exit
+        else if (e.getSource().equals(b_Exit)) {
+            System.exit(1);
+        }
 
-    public boolean isGameStarted() {
-        return inGame;
-    }
+        // Refresh
+        else if (e.getSource().equals(b_Refresh)) {
+            try {
+                connection.sendGridRefreshRequest(board);
+            } catch (IOException bozo) {System.out.println("Too bad you're stuck with it");}
+        }
 
-    public boolean isTurn() {
-        return isTurn;
-    }
+        // Ready
+        else if (e.getSource().equals(b_Ready)) {
+            try {
+                connection.sendGridReadyRequest(board);
+                b_Ready.setVisible(false);
+                b_Refresh.setVisible(false);
+                l_turnDisplay.setVisible(true);
+                l_turnDisplay.setText("Waiting for opponent to confirm");
+            } catch (IOException bozo) {System.out.println("Not ready");}
+        }
 
-    public void setTurn(boolean turn) {
-        this.isTurn = turn;
-    }
-
-    private void connectToServer() {
-
-        // Establish connection thread
-        System.out.println("Connect");
-        connection = new ClientConnectionManager(this);
-
-        Thread connectionThread = new Thread(connection);
-        connectionThread.start();
 
     }
 
-    private void addBoardButtons() {
+    
 
+    
+
+    
+
+    // sets game to board screen
+    private void setBoardScreen() {
+
+        // remove all elements from screen and add ready and refresh buttons
+        clearScreen();
+        b_Refresh.setVisible(true);
+        b_Ready.setVisible(true);
+
+        // add the player and opponent boards in the correct positions
         playerBoard.setLayout(new GridLayout(Constants.BOARD_DIMENSIONS, Constants.BOARD_DIMENSIONS));
         componentInit(playerBoard, 1 - boardXBound - boardWidth, boardYBound, boardWidth, boardHeight);
         playerBoard.setVisible(true);
@@ -261,10 +347,7 @@ public class GameWindow extends JFrame implements ActionListener {
         componentInit(opBoard, boardXBound, boardYBound, boardWidth, boardHeight);
         opBoard.setVisible(true);
 
-
-        playerBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
-        opponentBoardButtons = new JLabel[Constants.BOARD_DIMENSIONS][Constants.BOARD_DIMENSIONS];
-
+        // load images for tile assets
         tileImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "CoffeeTile.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         shipImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "Ship.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         shipShotImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ShipShot.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
@@ -283,11 +366,13 @@ public class GameWindow extends JFrame implements ActionListener {
         for (int i = 0; i < Constants.BOARD_DIMENSIONS; i++) {
             for (int j = 0; j < Constants.BOARD_DIMENSIONS; j++) {
 
+                // initialize player board tiles
                 playerBoardButtons[i][j] = new JLabel(tileImg);
                 playerBoardButtons[i][j].setBorder(BorderFactory.createLineBorder(Color.black));
                 playerBoardButtons[i][j].setVisible(true);
                 playerBoard.add(playerBoardButtons[i][j]);
 
+                // initialize opponent board tiles
                 opponentBoardButtons[i][j] = new JLabel(tileImg);
                 opponentBoardButtons[i][j].setBorder(BorderFactory.createLineBorder(Color.black));
                 opponentBoardButtons[i][j].setVisible(true);
@@ -299,8 +384,10 @@ public class GameWindow extends JFrame implements ActionListener {
         resize();
     }
 
+    // updates the board displays based on the state of the grid passed 
     public void updatePlayerBoard(Grid grid) {
 
+        // set the board to the new grid passed in
         board = grid;
         Grid.GridCell[][] cells = grid.getCells();
         for (int i = 0; i < Constants.BOARD_DIMENSIONS; i++) {
@@ -345,7 +432,99 @@ public class GameWindow extends JFrame implements ActionListener {
         }
     }
 
+
+
+    // attempts to make a connection to the server
+    private void connectToServer() {
+
+        // Establish connection thread
+        connection = new ClientConnectionManager(this);
+        Thread connectionThread = new Thread(connection);
+        connectionThread.start();
+
+    }
+
+    
+
+    // returns JComponent passed in as a WindowComponent
+    private WindowComponent getWindowComponent(JComponent element) {
+        for (WindowComponent e : elements) {
+            if (e.getComponent().equals(element)) {
+                return e;
+            }
+        }
+
+        return null;
+    }
+
+    // starts game
+    public void startGame() {
+        clientTurn = false;
+        inGame = true;
+        setBoardScreen();
+        resize();
+    }
+
+    // ends game
+    public void endGame() {
+        clearScreen();
+        l_title.setVisible(true);
+        b_Connect.setVisible(true);
+        b_Exit.setVisible(true);
+    }
+
+    // returns if client is in game
+    public boolean isGameStarted() {
+        return inGame;
+    }
+    
+
+    // return whether or not its the clients turn
+    public boolean isTurn() {
+        return isTurn;
+    }
+
+    // sets clients turn and changes the display of whose turn it is
+    public void setTurn(boolean turn) {
+        this.isTurn = turn;
+
+        if (isTurn) {
+            l_turnDisplay.setText("Your Turn");
+        }
+        else {
+            l_turnDisplay.setText("Opponents Turn");
+        }
+    }
+
+    // gets x pixel value of double location
+    private int getWindowXPosition(double relative) {
+        return (int) (relative * getWidth());
+    }
+
+    // gets y pixel value of double location
+    private int getWindowYPosition(double relative) {
+        return (int) (relative * getHeight());
+    }
+    
+
+    // removes all components that have been init'ed from the screen
+    public void clearScreen() {
+        for (WindowComponent c : elements) {
+            c.setVisible(false);
+        }
+        revalidate();
+    }
+
+    // sets screen to waiting for opponent screen
+    public void waitScreen() {
+        clearScreen();
+        l_wait.setVisible(true);
+
+    }
+
+    // called when screen is resized, resizes all components according to there relative size
     private void resize() {
+
         // resize all images/assets
         for (AssetImage img : loadedImages) {
             img.resizeImage(getWidth(), getHeight());
@@ -357,6 +536,18 @@ public class GameWindow extends JFrame implements ActionListener {
         }
 
         revalidate();
+    }
+
+    // resets all the boarders of boards to there default
+    public void resetBorders() {
+
+        // gor through each board tile
+        for (int x = 0; x < Constants.BOARD_DIMENSIONS; x++) {
+        for (int y = 0; y < Constants.BOARD_DIMENSIONS; y++) {
+            opponentBoardButtons[x][y].setBorder(BorderFactory.createLineBorder(Color.black));
+            playerBoardButtons[x][y].setBorder(BorderFactory.createLineBorder(Color.black));
+        }}
+
     }
 
 }
