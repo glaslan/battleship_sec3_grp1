@@ -350,7 +350,7 @@ public class GameWindow extends JFrame implements ActionListener {
         // load images for tile assets
         tileImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "CoffeeTile.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         shipImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ShipTile.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
-        shipShotImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ShipShot.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
+        shipShotImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "ShipHit.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         missImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "Miss.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         sugarSharkImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "SugarShark.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
         shotImg = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "Hit.png"), boardWidth / Constants.BOARD_DIMENSIONS, boardHeight / Constants.BOARD_DIMENSIONS, getWidth(), getHeight());
