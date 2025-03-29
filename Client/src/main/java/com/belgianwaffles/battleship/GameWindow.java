@@ -202,8 +202,8 @@ public class GameWindow extends JFrame implements ActionListener {
                             GridCell[][] cells = board.getCells();
 
                             // shoot grid and send to server, also setTurn to false
-                            if (!cells[x][y].hasShotP1()) {
-                                cells[x][y].setShotP1(true);
+                            if (!cells[y][x].hasShotP1()) {
+                                cells[y][x].setShotP1(true);
                                 Grid updated = new Grid(cells);
                                 try {
                                     connection.sendGridToServer(updated);

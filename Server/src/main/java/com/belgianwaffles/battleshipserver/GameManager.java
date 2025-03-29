@@ -87,7 +87,14 @@ public class GameManager implements Runnable {
         this.startGame();
 
         // Main loop
+        boolean gridSent = false;
         while (this.play()) {
+            // Send grid on first run
+            if (!gridSent) {
+                this.sendGridsToPlayers();
+                gridSent = true;
+            }
+            
             // Receive packet from player
             Packet received = this.findPacket(this.mCurrentSocket, Packet.PACKET_TYPE_GRID);
             if (received == null) {
@@ -99,6 +106,7 @@ public class GameManager implements Runnable {
                 Grid grid = received.getGrid();
                 if (this.mGrid.checkDifferences(grid) != 1) {
                     System.err.println("Too many grid changes received");
+                    this.sendGridsToPlayers();
                     continue;
                 }
 
@@ -107,15 +115,17 @@ public class GameManager implements Runnable {
                     this.mGrid.combine(grid, this.mGrid);
                 }
                 else {
+                    grid.translateP1toP2();
                     this.mGrid.combine(this.mGrid, grid);
                     this.generateSugarSharks();
                 }
             }
 
-            // Do some stuff with sendsing
+            // Do some stuff with sending
             
             // Swap players
             this.swapPlayers();
+            gridSent = false;
 
             // Checks if there are ships remaining
             if (this.getShipsRemaining() <= 0) {
@@ -291,6 +301,38 @@ public class GameManager implements Runnable {
         return false;
     }
 
+    /**
+     * Sends the grids to each of the clients with required flags and data
+     */
+    private void sendGridsToPlayers() {
+        // Get client grids
+        Grid g1 = new Grid(this.mGrid.getCells());
+        Grid g2 = new Grid(this.mGrid.getCells());
+
+        // Setup packets
+        g1.getGridP1();
+        g2.getGridP2();
+        
+        // Setup packets
+        Packet p1 = new Packet();
+        Packet p2 = new Packet();
+
+        // Base flags off of current player
+        if (this.mCurrentPlayerIsOne) {
+            p1.addTurn((byte)1);
+        }
+        else {
+            p2.addTurn((byte)1);
+        }
+
+        // Serialize grids
+        p1.serialize(g1);
+        p2.serialize(g2);
+
+        // Send grids
+        ConnectionManager.sendPacket(this.mClient1, p1);
+        ConnectionManager.sendPacket(this.mClient2, p2);
+    }
 
     
     
@@ -301,7 +343,7 @@ public class GameManager implements Runnable {
      * @param client the client socket to check
      * @param player the player number, either 1 or 2
      */
-    private void getPlayerGrid(Socket client, int player) {
+    private void generatePlayerGrid(Socket client, int player) {
         Packet packet = null;
         while (this.play() && packet == null) {
             // Find the grid packet from client
@@ -330,6 +372,7 @@ public class GameManager implements Runnable {
                     this.mGrid.combine(g, this.mGrid);
                 }
                 else {
+                    g.translateP1toP2();
                     this.mGrid.combine(this.mGrid, g);
                 }
             }
@@ -383,10 +426,10 @@ public class GameManager implements Runnable {
 
         // Create runnables
         Runnable getGridP1 = () -> {
-            this.getPlayerGrid(this.mClient1, 1);
+            this.generatePlayerGrid(this.mClient1, 1);
         };
         Runnable getGridP2 = () -> {
-            this.getPlayerGrid(this.mClient2, 2);
+            this.generatePlayerGrid(this.mClient2, 2);
         };
 
         // Setup threads

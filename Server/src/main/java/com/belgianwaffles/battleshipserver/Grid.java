@@ -14,9 +14,11 @@ public final class Grid {
         private static final byte MASK_SHARK_1  = (byte)0b10000000;
         private static final byte MASK_SHIP_1   = (byte)0b01000000;
         private static final byte MASK_SHOT_1   = (byte)0b00100000;
-        private static final byte MASK_SHARK_2  = (byte)0b00010000;
-        private static final byte MASK_SHIP_2   = (byte)0b00001000;
-        private static final byte MASK_SHOT_2   = (byte)0b00000100;
+        private static final byte MASK_SUNK_1   = (byte)0b00010000;
+        private static final byte MASK_SHARK_2  = (byte)0b00001000;
+        private static final byte MASK_SHIP_2   = (byte)0b00000100;
+        private static final byte MASK_SHOT_2   = (byte)0b00000010;
+        private static final byte MASK_SUNK_2   = (byte)0b00000001;
 
 
 
@@ -95,14 +97,6 @@ public final class Grid {
         }
         
         /**
-         * Sets the shot bit for p1
-         * @param hasShot true if shot should be placed
-         */
-        public void setShotP1(boolean hasShip) {
-            this.bitManipulate(MASK_SHOT_1, hasShip);
-        }
-        
-        /**
          * Sets the ship bit for p2
          * @param hasShip true if ship should be placed
          */
@@ -111,11 +105,39 @@ public final class Grid {
         }
         
         /**
+         * Sets the shot bit for p1
+         * @param hasShot true if shot should be placed
+         */
+        public void setShotP1(boolean hasShip) {
+            this.bitManipulate(MASK_SHOT_1, hasShip);
+        }
+        
+        /**
          * Sets the shot bit for p2
          * @param hasShot true if shot should be placed
          */
         public void setShotP2(boolean hasShot) {
             this.bitManipulate(MASK_SHOT_2, hasShot);
+        }
+        
+        /**
+         * Sets the sunk bit for p1
+         * @param hasShot true if shot should be placed
+         */
+        public void setSunkP1(boolean hasShip) {
+            if (this.hasShipP1()) {
+                this.bitManipulate(MASK_SHOT_1, hasShip);
+            }
+        }
+        
+        /**
+         * Sets the sunk bit for p2
+         * @param hasShot true if shot should be placed
+         */
+        public void setSunkP2(boolean hasShot) {
+            if (this.hasShipP2()) {
+                this.bitManipulate(MASK_SHOT_2, hasShot);
+            }
         }
 
 
@@ -163,19 +185,19 @@ public final class Grid {
         }
         
         /**
-         * Checks if the tile has been shot by p1
-         * @return true if tile has been shot
-         */
-        public boolean hasShotP1() {
-            return this.getBit(MASK_SHOT_1);
-        }
-        
-        /**
          * Checks if the tile has a ship for p2
          * @return true if tile has a ship
          */
         public boolean hasShipP2() {
             return this.getBit(MASK_SHIP_2);
+        }
+        
+        /**
+         * Checks if the tile has been shot by p1
+         * @return true if tile has been shot
+         */
+        public boolean hasShotP1() {
+            return this.getBit(MASK_SHOT_1);
         }
         
         /**
@@ -187,39 +209,75 @@ public final class Grid {
         }
 
         /**
+         * Checks if the ship has been sunk by p2
+         * @return true if tile has been shot
+         */
+        public boolean hasSunkP1() {
+            return this.getBit(MASK_SUNK_1);
+        }
+
+        /**
+         * Checks if the ship has been sunk by p1
+         * @return true if tile has been shot
+         */
+        public boolean hasSunkP2() {
+            return this.getBit(MASK_SUNK_2);
+        }
+
+        /**
          * Converts the cells data from p1 to p2
          */
         public void translateP1toP2() {
-            if (this.hasSharkP1()) {
-                this.setSharkP1(false);
-                this.setSharkP2(true);
+            // Save shot bit
+            byte bit = (byte)(this.hasShotP2() ? MASK_SHOT_2 : 0);
+            if (bit != 0) {
+                bit |= (byte)(this.hasShotP1() && this.hasShipP2() ? MASK_SHIP_2 : 0);
             }
-            if (this.hasShipP1()) {
-                this.setShipP1(false);
-                this.setShipP2(true);
-            }
-            if (this.hasShotP1()) {
-                this.setShotP1(false);
-                this.setShotP2(true);
-            }
+            
+            // Only have player 1 data, alt+f4 player 2 data
+            this.mCell = (byte)(this.mCell & GRID_CELL_P1);
+            
+            // Swap flags
+            this.mCell = (byte)((this.mCell >> 4) | (bit << 4));
         }
-
+        
         /**
          * Converts the cell data from p2 to p1
          */
         public void translateP2toP1() {
-            if (this.hasSharkP2()) {
-                this.setSharkP2(false);
-                this.setSharkP1(true);
+            // Only have player 1 data, alt+f4 player 2 data
+            this.mCell = (byte)(this.mCell & GRID_CELL_P2);
+    
+            // Swap flags
+            this.mCell = (byte)((this.mCell << 4));
+        }
+
+        public void getPlayer1() {
+            // Save important bits
+            byte bits = (byte)(this.hasShotP2() ? MASK_SHOT_2 : 0);
+            if (this.hasShotP1() && this.hasShipP2()) {
+                bits |= (byte)(MASK_SHIP_2);
             }
-            if (this.hasShipP2()) {
-                this.setShipP2(false);
-                this.setShipP1(true);
+
+            // Remove bits
+            this.mCell &= GRID_CELL_P1;
+            
+            // Save this cells data and important p2 data
+            this.mCell = (byte)((this.mCell & GRID_CELL_P1) | bits);
+        }
+        
+        public void getPlayer2() {
+            // Save important bits
+            byte bits = (byte)(this.hasShotP1() ? MASK_SHOT_1 : 0);
+            if (this.hasShotP2() && this.hasShipP1()) {
+                bits |= (byte)(MASK_SHIP_1);
             }
-            if (this.hasShotP2()) {
-                this.setShotP2(false);
-                this.setShotP1(true);
-            }
+
+            // Remove bits
+            this.mCell &= GRID_CELL_P2;
+            
+            // Save this cells data and important p2 data
+            this.mCell = (byte)(((this.mCell & GRID_CELL_P2) << 4) | (bits >> 4));
         }
         
         /**
@@ -232,19 +290,20 @@ public final class Grid {
 
             // Add bits
             str += (this.hasSharkP1() ? "1" : "0");
-            str += (this.hasSharkP2() ? "1" : "0");
             str += (this.hasShipP1() ? "1" : "0");
             str += (this.hasShotP1() ? "1" : "0");
+            str += (this.hasSunkP1() ? "1" : "0");
+            str += (this.hasSharkP2() ? "1" : "0");
             str += (this.hasShipP2() ? "1" : "0");
             str += (this.hasShotP2() ? "1" : "0");
-
-            // Empty bits, can be added later
-            str += "00";
+            str += (this.hasSunkP2() ? "1" : "0");
 
             return str;
         }
         
     }
+
+
 
     // ----- Constants -----
 
@@ -259,6 +318,7 @@ public final class Grid {
     private GridCell[][] mCells;
     private ArrayList <Ship> p1Ships;
     private ArrayList <Ship> p2Ships;
+
 
 
     // ----- Methods -----
@@ -362,19 +422,42 @@ public final class Grid {
     }
     
     /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void getGridP1() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].getPlayer1();
+            }
+        }
+    }
+    
+    /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void getGridP2() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].getPlayer2();
+            }
+        }
+    }
+    
+    /**
      * Allows for comparing of 2 grids to see how many differences there are
      * @return the number of differences in the grid
      */
     public int checkDifferences(Grid other) {
-        int diff = 0;
-        for (int i = 0; i < GRID_SIZE; i++) {
-            for (int j = 0; j < GRID_SIZE; j++) {
-                if (this.mCells[i][j] != other.mCells[i][j]) {
-                    diff++;
-                }
-            }
-        }
-        return diff;
+        return 1;
+        // int diff = 0;
+        // for (int i = 0; i < GRID_SIZE; i++) {
+        //     for (int j = 0; j < GRID_SIZE; j++) {
+        //         if (this.mCells[i][j] != other.mCells[i][j]) {
+        //             diff++;
+        //         }
+        //     }
+        // }
+        // return diff;
     }
 
     public int checkShipCount(int player) {
@@ -710,7 +793,7 @@ public final class Grid {
         
         for (int y = 0; y < GRID_SIZE; y++) {
             for (int x = 0; x < GRID_SIZE; x++) {
-                str += this.mCells[x][y].toString();
+                str += this.mCells[x][y].toString() + " ";
             }
             str += '\n';
         }

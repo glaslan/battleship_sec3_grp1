@@ -12,22 +12,17 @@ public final class Grid {
         private static final byte MASK_SHARK_1  = (byte)0b10000000;
         private static final byte MASK_SHIP_1   = (byte)0b01000000;
         private static final byte MASK_SHOT_1   = (byte)0b00100000;
-        private static final byte MASK_SHARK_2  = (byte)0b00010000;
-        private static final byte MASK_SHIP_2   = (byte)0b00001000;
-        private static final byte MASK_SHOT_2   = (byte)0b00000100;
+        private static final byte MASK_SUNK_1   = (byte)0b00010000;
+        private static final byte MASK_SHARK_2  = (byte)0b00001000;
+        private static final byte MASK_SHIP_2   = (byte)0b00000100;
+        private static final byte MASK_SHOT_2   = (byte)0b00000010;
+        private static final byte MASK_SUNK_2   = (byte)0b00000001;
 
 
 
         // ----- Data -----
 
-        // first position:      is on fire
-        // second position:     has shark
-        // third position:      has ship p1
-        // fourth position      shot by p1
-        // fifth position:      has ship p2
-        // sixth position:      shot by p2
-        // seventh position:    nothing
-        // eighth position:     nothing
+        // If you want to know what the stuff means, refer to masks
         byte mCell;
 
 
@@ -75,28 +70,72 @@ public final class Grid {
         
         // ----- Setters -----
 
+        /**
+         * Sets the shark bit for p1
+         * @param hasShark true if shark should be set
+         */
         public void setSharkP1(boolean hasShark) {
             this.bitManipulate(MASK_SHARK_1, hasShark);
         }
         
+        /**
+         * Sets the shark bit for p2
+         * @param hasShark true if shark should be set
+         */
         public void setSharkP2(boolean hasShark) {
             this.bitManipulate(MASK_SHARK_2, hasShark);
         }
         
+        /**
+         * Sets the ship bit for p1
+         * @param hasShip true if ship should be placed
+         */
         public void setShipP1(boolean hasShip) {
             this.bitManipulate(MASK_SHIP_1, hasShip);
         }
         
-        public void setShotP1(boolean hasShip) {
-            this.bitManipulate(MASK_SHOT_1, hasShip);
-        }
-        
+        /**
+         * Sets the ship bit for p2
+         * @param hasShip true if ship should be placed
+         */
         public void setShipP2(boolean hasShot) {
             this.bitManipulate(MASK_SHIP_2, hasShot);
         }
         
+        /**
+         * Sets the shot bit for p1
+         * @param hasShot true if shot should be placed
+         */
+        public void setShotP1(boolean hasShip) {
+            this.bitManipulate(MASK_SHOT_1, hasShip);
+        }
+        
+        /**
+         * Sets the shot bit for p2
+         * @param hasShot true if shot should be placed
+         */
         public void setShotP2(boolean hasShot) {
             this.bitManipulate(MASK_SHOT_2, hasShot);
+        }
+        
+        /**
+         * Sets the sunk bit for p1
+         * @param hasShot true if shot should be placed
+         */
+        public void setSunkP1(boolean hasShip) {
+            if (this.hasShipP1()) {
+                this.bitManipulate(MASK_SHOT_1, hasShip);
+            }
+        }
+        
+        /**
+         * Sets the sunk bit for p2
+         * @param hasShot true if shot should be placed
+         */
+        public void setSunkP2(boolean hasShot) {
+            if (this.hasShipP2()) {
+                this.bitManipulate(MASK_SHOT_2, hasShot);
+            }
         }
 
 
@@ -144,19 +183,19 @@ public final class Grid {
         }
         
         /**
-         * Checks if the tile has been shot by p1
-         * @return true if tile has been shot
-         */
-        public boolean hasShotP1() {
-            return this.getBit(MASK_SHOT_1);
-        }
-        
-        /**
          * Checks if the tile has a ship for p2
          * @return true if tile has a ship
          */
         public boolean hasShipP2() {
             return this.getBit(MASK_SHIP_2);
+        }
+        
+        /**
+         * Checks if the tile has been shot by p1
+         * @return true if tile has been shot
+         */
+        public boolean hasShotP1() {
+            return this.getBit(MASK_SHOT_1);
         }
         
         /**
@@ -166,31 +205,109 @@ public final class Grid {
         public boolean hasShotP2() {
             return this.getBit(MASK_SHOT_2);
         }
+
+        /**
+         * Checks if the ship has been sunk by p2
+         * @return true if tile has been shot
+         */
+        public boolean hasSunkP1() {
+            return this.getBit(MASK_SUNK_1);
+        }
+
+        /**
+         * Checks if the ship has been sunk by p1
+         * @return true if tile has been shot
+         */
+        public boolean hasSunkP2() {
+            return this.getBit(MASK_SUNK_2);
+        }
+
+        /**
+         * Converts the cells data from p1 to p2
+         */
+        public void translateP1toP2() {
+            // Save shot bit
+            byte bit = (byte)(this.hasShotP2() ? MASK_SHOT_2 : 0);
+            if (bit != 0) {
+                bit |= (byte)(this.hasShotP1() && this.hasShipP2() ? MASK_SHIP_2 : 0);
+            }
+            
+            // Only have player 1 data, alt+f4 player 2 data
+            this.mCell = (byte)(this.mCell & GRID_CELL_P1);
+            
+            // Swap flags
+            this.mCell = (byte)((this.mCell >> 4) | (bit << 4));
+        }
         
+        /**
+         * Converts the cell data from p2 to p1
+         */
+        public void translateP2toP1() {
+            // Only have player 1 data, alt+f4 player 2 data
+            this.mCell = (byte)(this.mCell & GRID_CELL_P2);
+    
+            // Swap flags
+            this.mCell = (byte)((this.mCell << 4));
+        }
+
+        public void getPlayer1() {
+            // Save important bits
+            byte bits = (byte)(this.hasShotP2() ? MASK_SHOT_2 : 0);
+            if (this.hasShotP1() && this.hasShipP2()) {
+                bits |= (byte)(MASK_SHIP_2);
+            }
+
+            // Remove bits
+            this.mCell &= GRID_CELL_P1;
+            
+            // Save this cells data and important p2 data
+            this.mCell = (byte)((this.mCell & GRID_CELL_P1) | bits);
+        }
+        
+        public void getPlayer2() {
+            // Save important bits
+            byte bits = (byte)(this.hasShotP1() ? MASK_SHOT_1 : 0);
+            if (this.hasShotP2() && this.hasShipP1()) {
+                bits |= (byte)(MASK_SHIP_1);
+            }
+
+            // Remove bits
+            this.mCell &= GRID_CELL_P2;
+            
+            // Save this cells data and important p2 data
+            this.mCell = (byte)(((this.mCell & GRID_CELL_P2) << 4) | (bits >> 4));
+        }
+        
+        /**
+         * Gives a binary representation of the cell byte data
+         * @return a formatted, printable cell
+         */
         @Override
         public String toString() {
             String str = "";
 
             // Add bits
             str += (this.hasSharkP1() ? "1" : "0");
-            str += (this.hasSharkP2() ? "1" : "0");
             str += (this.hasShipP1() ? "1" : "0");
             str += (this.hasShotP1() ? "1" : "0");
+            str += (this.hasSunkP1() ? "1" : "0");
+            str += (this.hasSharkP2() ? "1" : "0");
             str += (this.hasShipP2() ? "1" : "0");
             str += (this.hasShotP2() ? "1" : "0");
-
-            // Empty bits, can be added later
-            str += "00 ";
+            str += (this.hasSunkP2() ? "1" : "0");
 
             return str;
         }
+        
     }
-    
-    
+
+
 
     // ----- Constants -----
 
-    public static final int GRID_SIZE  = 10;
+    public static final int GRID_SIZE       = 10;
+    private static final byte GRID_CELL_P1  = (byte)0b11110000;
+    private static final byte GRID_CELL_P2  = (byte)0b00001111;
     
 
 
@@ -239,38 +356,119 @@ public final class Grid {
             }
         }
     }
-
-
-
-    // ----- Getters -----
-
+    
     /**
-     * Copies cell data so it can be changed outside of class without affecting actual grid
+     * Allows for the combination of 2 grids into 1.
+     * @param g1 player 1's grid
+     * @param g2 player 2's grid
      */
-    private GridCell[][] copyCells() {
-        GridCell[][] copy = new GridCell[GRID_SIZE][GRID_SIZE];
+    public synchronized void combine(Grid g1, Grid g2) {
+        // Combine cells
         for (int i = 0; i < GRID_SIZE; i++) {
-            System.arraycopy(this.mCells[i], 0, copy[i], 0, GRID_SIZE);
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j] = new GridCell((byte)((g1.mCells[i][j].getCell() & GRID_CELL_P1) | (g2.mCells[i][j].getCell() & GRID_CELL_P2)));
+            }
         }
-        return copy;
     }
 
     /**
-     * Gets a copy of the cell contents of the grid.
+     * Gets the cell contents of the grid.
      * Can create a new grid with the changed data.
      * @return 2D array with all gridcells
      */
     public GridCell[][] getCells() {
-        return this.copyCells();
+        return this.mCells;
+    }
+
+    /**
+     * Allows for cells to be passed to grid
+     * @param cells the new cells to put into grid
+     */
+    public void setCells(GridCell[][] cells) {
+        this.mCells = new GridCell[GRID_SIZE][GRID_SIZE];
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j] = new GridCell(cells[i][j].getCell());
+            }
+        }
+    }
+
+    /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void translateP1toP2() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].translateP1toP2();
+            }
+        }
     }
     
+    /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void translateP2toP1() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].translateP2toP1();
+            }
+        }
+    }
+    
+    /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void getGridP1() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].getPlayer1();
+            }
+        }
+    }
+    
+    /**
+     * Changes the grid data from being in player 1 positions to player 2 positions
+     */
+    public void getGridP2() {
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                this.mCells[i][j].getPlayer2();
+            }
+        }
+    }
+    
+    /**
+     * Allows for comparing of 2 grids to see how many differences there are
+     * @return the number of differences in the grid
+     */
+    public int checkDifferences(Grid other) {
+        return 1;
+        // int diff = 0;
+        // for (int i = 0; i < GRID_SIZE; i++) {
+        //     for (int j = 0; j < GRID_SIZE; j++) {
+        //         if (this.mCells[i][j] != other.mCells[i][j]) {
+        //             diff++;
+        //         }
+        //     }
+        // }
+        // return diff;
+    }
+
+
+    
+    // ----- Extras -----
+
+    /**
+     * Gives a formatted grid string
+     * @return A formatted, printable string
+     */
     @Override
     public String toString() {
         String str = "";
         
         for (int y = 0; y < GRID_SIZE; y++) {
             for (int x = 0; x < GRID_SIZE; x++) {
-                str += this.mCells[x][y].toString();
+                str += this.mCells[x][y].toString() + " ";
             }
             str += '\n';
         }

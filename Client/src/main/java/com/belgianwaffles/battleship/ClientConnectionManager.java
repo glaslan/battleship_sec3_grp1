@@ -60,15 +60,12 @@ public class ClientConnectionManager implements Runnable{
 
         Grid grid = packet.getGrid();
         boolean turn = packet.isTurn();
-        System.out.println(grid);
-        
 
         if (!game.isGameStarted()) {
             game.startGame(grid);
         }
         game.setTurn(turn);
         GridCell[][] cells = grid.getCells();
-
 
         Grid newGrid = new Grid(cells);
         game.updatePlayerBoard(newGrid);
