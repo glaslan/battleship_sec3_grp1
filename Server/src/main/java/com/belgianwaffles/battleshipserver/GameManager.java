@@ -452,7 +452,22 @@ public class GameManager implements Runnable {
      */
     private void endGame() {
         // Send winning data
-        
+        Packet winPacket = new Packet();
+        Packet lossPacket = new Packet();
+
+        winPacket.serialize(true);
+        lossPacket.serialize(false);
+
+        if (!this.mCurrentPlayerIsOne) {
+            // P1 loss, P2 win
+            ConnectionManager.sendPacket(this.mClient1, lossPacket);
+            ConnectionManager.sendPacket(this.mClient2, winPacket);
+        }
+        else {
+            // P1 win, P2 loss
+            ConnectionManager.sendPacket(this.mClient1, winPacket);
+            ConnectionManager.sendPacket(this.mClient2, lossPacket);
+        }
 
         // Close clients
         System.out.println("Ending game on thread id=" + Thread.currentThread().threadId());
