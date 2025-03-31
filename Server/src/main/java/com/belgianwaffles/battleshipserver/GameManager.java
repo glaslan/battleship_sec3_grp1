@@ -60,7 +60,6 @@ public class GameManager implements Runnable {
 
         this.mGrid = new Grid();
         this.mPackets = new ArrayList<>();
-     
     }
     
     
@@ -469,6 +468,7 @@ public class GameManager implements Runnable {
             ConnectionManager.sendPacket(this.mClient2, lossPacket);
         }
 
+        
         // Close clients
         System.out.println("Ending game on thread id=" + Thread.currentThread().threadId());
 
@@ -513,12 +513,30 @@ public class GameManager implements Runnable {
      * Pings clients to ensure connections have not been severed
      */
     private void pingClients() {
-        // If a client has disconnected, end game
-        if (!this.ping(this.mClient1) || !this.ping(this.mClient2)) {
+        // Check client 1 hasn't disconnected
+        if (!this.ping(this.mClient1)) {
             FileLogger.logError(GameManager.class, "pingClients()", 
-            "Failed to ping a client on thread=" + Thread.currentThread().threadId());
-            System.err.println("Failed to ping a client on thread=" + Thread.currentThread().threadId());
+            "Failed to ping client 1 on thread=" + Thread.currentThread().threadId());
+            System.err.println("Failed to ping client 2 on thread=" + Thread.currentThread().threadId());
             this.mGameOver = true;
+            
+            // Send packet to other player, stating their win
+            Packet packet = new Packet();
+            packet.serialize(true);
+            ConnectionManager.sendPacket(this.mClient2, packet);
+        }
+        
+        // Check client 1 hasn't disconnected
+        if (!this.ping(this.mClient2)) {
+            FileLogger.logError(GameManager.class, "pingClients()", 
+            "Failed to ping client 2 on thread=" + Thread.currentThread().threadId());
+            System.err.println("Failed to ping client 2 on thread=" + Thread.currentThread().threadId());
+            this.mGameOver = true;
+
+            // Send packet to other player, stating their win
+            Packet packet = new Packet();
+            packet.serialize(true);
+            ConnectionManager.sendPacket(this.mClient1, packet);
         }
     }
 
