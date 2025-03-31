@@ -6,9 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
-import com.belgianwaffles.battleship.Grid;
 import com.belgianwaffles.battleship.Grid.GridCell;
-import com.belgianwaffles.battleship.Packet;
 
 public class ClientConnectionManager implements Runnable{
 
@@ -102,8 +100,8 @@ public class ClientConnectionManager implements Runnable{
         if (packet.hasFlag(Packet.PACKET_FLAG_WINNER)) {
             game.endGame(true);
         }
-        else if (true) {
-            
+        else {
+            game.endGame(false);
         }
 
     }
