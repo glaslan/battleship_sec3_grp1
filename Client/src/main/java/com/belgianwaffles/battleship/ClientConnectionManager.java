@@ -103,7 +103,6 @@ public class ClientConnectionManager implements Runnable{
         else {
             game.endGame(false);
         }
-
     }
 
 

@@ -228,17 +228,11 @@ public final class Grid {
          * Converts the cells data from p1 to p2
          */
         public void translateP1toP2() {
-            // Save shot bit
-            byte bit = (byte)(this.hasShotP2() ? MASK_SHOT_2 : 0);
-            if (bit != 0) {
-                bit |= (byte)(this.hasShotP1() && this.hasShipP2() ? MASK_SHIP_2 : 0);
-            }
-            
             // Only have player 1 data, alt+f4 player 2 data
             this.mCell = (byte)(this.mCell & GRID_CELL_P1);
             
             // Swap flags
-            this.mCell = (byte)((this.mCell >> 4) | (bit << 4));
+            this.mCell = (byte)((this.mCell >> 4));
         }
         
         /**

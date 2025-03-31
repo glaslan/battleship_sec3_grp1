@@ -128,6 +128,7 @@ public class GameManager implements Runnable {
 
             // Checks if there are ships remaining
             if (this.getShipsRemaining() <= 0) {
+                this.sendGridsToPlayers();
                 this.mGameOver = true;
             }
         }
@@ -318,10 +319,10 @@ public class GameManager implements Runnable {
 
         // Base flags off of current player
         if (this.mCurrentPlayerIsOne) {
-            p1.addTurn((byte)1);
+            p1.addTurn(Packet.PACKET_TURN_TRUE);
         }
         else {
-            p2.addTurn((byte)1);
+            p2.addTurn(Packet.PACKET_TURN_TRUE);
         }
 
         // Serialize grids
@@ -457,6 +458,7 @@ public class GameManager implements Runnable {
         winPacket.serialize(true);
         lossPacket.serialize(false);
 
+        // Determine winner from current player
         if (this.mCurrentPlayerIsOne) {
             // P1 loss, P2 win
             ConnectionManager.sendPacket(this.mClient1, lossPacket);
@@ -467,7 +469,6 @@ public class GameManager implements Runnable {
             ConnectionManager.sendPacket(this.mClient1, winPacket);
             ConnectionManager.sendPacket(this.mClient2, lossPacket);
         }
-
         
         // Close clients
         System.out.println("Ending game on thread id=" + Thread.currentThread().threadId());
