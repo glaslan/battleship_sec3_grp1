@@ -457,7 +457,7 @@ public class GameManager implements Runnable {
         winPacket.serialize(true);
         lossPacket.serialize(false);
 
-        if (!this.mCurrentPlayerIsOne) {
+        if (this.mCurrentPlayerIsOne) {
             // P1 loss, P2 win
             ConnectionManager.sendPacket(this.mClient1, lossPacket);
             ConnectionManager.sendPacket(this.mClient2, winPacket);
