@@ -402,6 +402,16 @@ public class GameManager implements Runnable {
         Thread receiveThreadP2 = new Thread(receiveP2);
         receiveThreadP2.setDaemon(true);
         receiveThreadP2.start();
+        
+        // Send image packets
+        Packet packetBackgroundP1 = new Packet();
+        Packet packetBackgroundP2 = new Packet();
+        packetBackgroundP1.serialize("p1Background.jpeg");
+        packetBackgroundP2.serialize("p2Background.jpeg");
+
+        // Send packets, end game if fail
+        ConnectionManager.sendPacket(this.mClient1, packetBackgroundP1);
+        ConnectionManager.sendPacket(this.mClient2, packetBackgroundP2);
 
         // Setup game states
         Packet packetGrid1 = new Packet();
