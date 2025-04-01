@@ -39,7 +39,7 @@ public final class ConnectionManager implements Runnable {
 
     /**
      * Closes the server and ends all currently running games
-     * @return
+     * @return true if successful
      */
     public boolean close() {
         // Closes server sockets and ends all games in progress
