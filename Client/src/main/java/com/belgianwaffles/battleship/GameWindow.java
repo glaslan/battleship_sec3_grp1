@@ -6,6 +6,7 @@ import java.awt.GridLayout;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.Canvas;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -51,6 +52,7 @@ public class GameWindow extends JFrame implements ActionListener {
     // board panel definitions
     private JPanel playerBoard = new JPanel();
     private JPanel opBoard = new JPanel();
+    private JLabel background;
 
 
     // image definitions
@@ -63,7 +65,6 @@ public class GameWindow extends JFrame implements ActionListener {
 
     // game variables
     private Grid board;
-    private boolean clientTurn;
     private boolean inGame;
     private boolean isTurn;
     private ClientConnectionManager connection;
@@ -125,27 +126,35 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.inGame = false;
 
+        ImageIcon back = new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png");
+
+        this.setGameBackground(back);
+        // this.background = new JLabel();
+        // componentInit(background, 0, 0, 1, 1);
+        // this.background.setVisible(true);
+        // this.setGameBackground(new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png"));
+
         /////// Buttons ////////
         b_Connect = new JButton("Connect");
         b_Connect.setBorder(BorderFactory.createLineBorder(Color.black, 10));
-        b_Connect.setFont(new Font("Aerial", Font.PLAIN, 60));
+        b_Connect.setFont(new Font(Constants.FONT, Font.PLAIN, 60));
         buttonInit(b_Connect, 0.25, 0.6, 0.5, 0.15);
         b_Connect.setVisible(true);
 
         b_Exit = new JButton("Exit");
         b_Exit.setBorder(BorderFactory.createLineBorder(Color.black, 10));
-        b_Exit.setFont(new Font("Aerial", Font.PLAIN, 60));
+        b_Exit.setFont(new Font(Constants.FONT, Font.PLAIN, 60));
         buttonInit(b_Exit, 0.25, 0.8, 0.5, 0.15);
         b_Exit.setVisible(true);
 
         b_Refresh = new JButton("Refresh");
         b_Refresh.setBorder(BorderFactory.createLineBorder(Color.black, 10));
-        b_Refresh.setFont(new Font("Aerial", Font.PLAIN, 24));
+        b_Refresh.setFont(new Font(Constants.FONT, Font.PLAIN, 24));
         buttonInit(b_Refresh, boardXBound + (boardWidth/4), 0.75, boardWidth / 2, 0.1);
 
         b_Ready = new JButton("Ready");
         b_Ready.setBorder(BorderFactory.createLineBorder(Color.black, 10));
-        b_Ready.setFont(new Font("Aerial", Font.PLAIN, 24));
+        b_Ready.setFont(new Font(Constants.FONT, Font.PLAIN, 24));
         buttonInit(b_Ready, 1 - (boardXBound + boardWidth) + (boardWidth/4), 0.75, boardWidth / 2, 0.1);
 
 
@@ -159,20 +168,29 @@ public class GameWindow extends JFrame implements ActionListener {
 
 
 
+        /////// Player Boards /////////
+        
+        opBoard.setLayout(new GridLayout(Constants.BOARD_DIMENSIONS, Constants.BOARD_DIMENSIONS));
+        componentInit(opBoard, boardXBound, boardYBound, boardWidth, boardHeight);
+
+        playerBoard.setLayout(new GridLayout(Constants.BOARD_DIMENSIONS, Constants.BOARD_DIMENSIONS));
+        componentInit(playerBoard, 1 - boardXBound - boardWidth, boardYBound, boardWidth, boardHeight);
+
+
 
         /////// Labels ////////
         l_title = new JLabel("Battleship", SwingConstants.CENTER);
         componentInit(l_title, 0.1, 0.1, 0.8, 0.2);
         l_title.setVisible(true);
-        l_title.setFont(new Font("Aerial", Font.BOLD, 100));
+        l_title.setFont(new Font(Constants.FONT, Font.BOLD, 100));
 
         l_wait = new JLabel("Waiting for Opponent", SwingConstants.CENTER);
         componentInit(l_wait, 0.1, 0.35, 0.8, 0.3);
-        l_wait.setFont(new Font("Aerial", Font.BOLD, 120));
+        l_wait.setFont(new Font(Constants.FONT, Font.BOLD, 120));
 
         l_turnDisplay = new JLabel("Waiting for Opponent", SwingConstants.CENTER);
         componentInit(l_turnDisplay, 0.1, 0.75, 0.8, 0.1);
-        l_turnDisplay.setFont(new Font("Aerial", Font.BOLD, 100));
+        l_turnDisplay.setFont(new Font(Constants.FONT, Font.BOLD, 100));
 
         getContentPane().addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
@@ -263,13 +281,18 @@ public class GameWindow extends JFrame implements ActionListener {
 
 
 
-        clientTurn = false;
         this.setSize((int) Toolkit.getDefaultToolkit().getScreenSize().getWidth(),
             (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
 
+        resize();
 
-        // this.startGame();
+    }
 
+    public void setGameBackground(ImageIcon background) {
+
+        AssetImage back = new AssetImage(background, 1, 1, getWidth(), getHeight());
+        imageInit(back);
+        this.setContentPane(new JLabel(back));
     }
 
 
@@ -313,15 +336,13 @@ public class GameWindow extends JFrame implements ActionListener {
         // Ready
         else if (e.getSource().equals(b_Ready)) {
             try {
+                l_turnDisplay.setText("Waiting for opponent to confirm");
                 connection.sendGridReadyRequest(board);
                 b_Ready.setVisible(false);
                 b_Refresh.setVisible(false);
                 l_turnDisplay.setVisible(true);
-                l_turnDisplay.setText("Waiting for opponent to confirm");
             } catch (IOException bozo) {System.out.println("Not ready");}
         }
-
-
     }
 
     
@@ -339,12 +360,7 @@ public class GameWindow extends JFrame implements ActionListener {
         b_Ready.setVisible(true);
 
         // add the player and opponent boards in the correct positions
-        playerBoard.setLayout(new GridLayout(Constants.BOARD_DIMENSIONS, Constants.BOARD_DIMENSIONS));
-        componentInit(playerBoard, 1 - boardXBound - boardWidth, boardYBound, boardWidth, boardHeight);
         playerBoard.setVisible(true);
-
-        opBoard.setLayout(new GridLayout(Constants.BOARD_DIMENSIONS, Constants.BOARD_DIMENSIONS));
-        componentInit(opBoard, boardXBound, boardYBound, boardWidth, boardHeight);
         opBoard.setVisible(true);
 
         // load images for tile assets
@@ -460,7 +476,7 @@ public class GameWindow extends JFrame implements ActionListener {
 
     // starts game
     public void startGame(Grid grid) {
-        clientTurn = false;
+        isTurn = false;
         inGame = true;
         setBoardScreen(grid);
         resize();
@@ -469,12 +485,16 @@ public class GameWindow extends JFrame implements ActionListener {
     // ends game
     public void endGame(boolean winner) {
 
+        this.inGame=false;
         if (winner) {
             l_turnDisplay.setText("You Win!");
         }
         else {
             l_turnDisplay.setText("You Lose!");
         }
+
+        playerBoard.removeAll();
+        opBoard.removeAll();
         
         Timer onRefresh;
         onRefresh = new Timer((int)(3000), 

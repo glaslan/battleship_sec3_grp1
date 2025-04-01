@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 
+import javax.swing.ImageIcon;
+
 import com.belgianwaffles.battleship.Grid.GridCell;
 
 public class ClientConnectionManager implements Runnable{
@@ -13,14 +15,12 @@ public class ClientConnectionManager implements Runnable{
     public static final int DEFAULT_PORT    = 27000;
     public static final int DEFAULT_TIMEOUT = 3000;
 
-    private GameWindow game;
+    private final GameWindow game;
 
     Socket connectionSocket;
 
     public ClientConnectionManager(GameWindow game) {
         this.game = game;
-
-        // game.clearScreen();
     }
 
     @Override
@@ -47,6 +47,7 @@ public class ClientConnectionManager implements Runnable{
                     case Packet.PACKET_TYPE_PING -> this.pingServer();
                     case Packet.PACKET_TYPE_GRID -> this.getGridPacket(packet);
                     case Packet.PACKET_TYPE_FLAGS -> this.getFlags(packet);
+                    case Packet.PACKET_TYPE_IMAGE -> this.getImage(packet);
                 }
             } catch (IOException e) {
                 break;
@@ -67,6 +68,13 @@ public class ClientConnectionManager implements Runnable{
 
         Grid newGrid = new Grid(cells);
         game.updatePlayerBoard(newGrid);
+    }
+
+    private void getImage(Packet packet) {
+
+        ImageIcon background = packet.getImage();
+        this.game.setGameBackground(background);
+
     }
 
     public void sendGridToServer(Grid grid) throws IOException {
@@ -98,11 +106,19 @@ public class ClientConnectionManager implements Runnable{
     public void getFlags(Packet packet) {
 
         if (packet.hasFlag(Packet.PACKET_FLAG_WINNER)) {
-            game.endGame(true);
+            this.game.endGame(true);
         }
         else {
-            game.endGame(false);
+            this.game.endGame(false);
         }
+        
+        try {
+            this.connectionSocket.close();
+        } 
+        catch (Exception bozo) {
+            System.out.println("Womp womp");
+        }
+        
     }
 
 

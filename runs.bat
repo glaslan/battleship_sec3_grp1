@@ -1,2 +1,2 @@
 cd ./Server
-java -cp ./target/* com.belgianwaffles.battleshipserver.Main
+java -cp ./target/* com.belgiacd..nwaffles.battleshipserver.Main
