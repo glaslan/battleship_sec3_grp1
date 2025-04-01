@@ -129,6 +129,7 @@ public class GameWindow extends JFrame implements ActionListener {
         ImageIcon back = new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png");
 
         this.setGameBackground(back);
+        this.setContentPane(this.background);
         // this.background = new JLabel();
         // componentInit(background, 0, 0, 1, 1);
         // this.background.setVisible(true);
@@ -292,7 +293,10 @@ public class GameWindow extends JFrame implements ActionListener {
 
         AssetImage back = new AssetImage(background, 1, 1, getWidth(), getHeight());
         imageInit(back);
-        this.setContentPane(new JLabel(back));
+        if (this.background == null) {
+            this.background = new JLabel();
+        }
+        this.background.setIcon(back);
     }
 
 
