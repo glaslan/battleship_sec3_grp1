@@ -228,24 +228,27 @@ public final class Grid {
          * Converts the cells data from p1 to p2
          */
         public void translateP1toP2() {
-            // Only have player 1 data, alt+f4 player 2 data
-            this.mCell = (byte)(this.mCell & GRID_CELL_P1);
-            
             // Swap flags
             this.mCell = (byte)((this.mCell >> 4));
+            
+            // Only have player 1 data, alt+f4 player 2 data
+            this.mCell = (byte)(this.mCell & GRID_CELL_P2);
         }
         
         /**
          * Converts the cell data from p2 to p1
          */
         public void translateP2toP1() {
-            // Only have player 1 data, alt+f4 player 2 data
-            this.mCell = (byte)(this.mCell & GRID_CELL_P2);
-    
             // Swap flags
             this.mCell = (byte)((this.mCell << 4));
+            
+            // Only have player 2 data, alt+f4 player 1 data
+            this.mCell = (byte)(this.mCell & GRID_CELL_P1);
         }
 
+        /**
+         * Removes unnecessary data from grid, use before sending
+         */
         public void getPlayer1() {
             // Save important bits
             byte bits = (byte)(this.hasShotP2() ? MASK_SHOT_2 : 0);
@@ -260,6 +263,9 @@ public final class Grid {
             this.mCell = (byte)((this.mCell & GRID_CELL_P1) | bits);
         }
         
+        /**
+         * Removes unnecessary data from grid for player 2, use before sending
+         */
         public void getPlayer2() {
             // Save important bits
             byte bits = (byte)(this.hasShotP1() ? MASK_SHOT_1 : 0);
@@ -294,7 +300,6 @@ public final class Grid {
 
             return str;
         }
-        
     }
 
 
