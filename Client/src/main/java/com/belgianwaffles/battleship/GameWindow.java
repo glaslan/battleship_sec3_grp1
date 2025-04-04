@@ -291,6 +291,16 @@ public class GameWindow extends JFrame implements ActionListener {
 
     public void setGameBackground(ImageIcon background) {
 
+        ArrayList<WindowComponent> components = new ArrayList<WindowComponent>();
+
+        for (WindowComponent comp : this.elements) {
+            if (comp.getComponent().isVisible()) {
+                components.add(comp);
+            }
+        }
+
+        clearScreen();
+
         AssetImage back = new AssetImage(background, 1, 1, getWidth(), getHeight());
         imageInit(back);
         if (this.background == null) {
@@ -559,7 +569,7 @@ public class GameWindow extends JFrame implements ActionListener {
     // removes all components that have been init'ed from the screen
     public void clearScreen() {
         for (WindowComponent c : elements) {
-            c.setVisible(false);
+            c.getComponent().setVisible(false);
         }
         revalidate();
     }
