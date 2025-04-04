@@ -211,10 +211,10 @@ public class GameWindow extends JFrame implements ActionListener {
                     for (int y = 0; y < Constants.BOARD_DIMENSIONS; y++) {
 
                         // get location of mouse click
-                        if (e.getPoint().getX() >= (boardXBound + (x * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
-                            e.getPoint().getX() < (boardXBound + ((x + 1) * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
-                            e.getPoint().getY() >= (boardYBound + (y * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight() &&
-                            e.getPoint().getY() < (boardYBound + ((y + 1) * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight()) 
+                        if (e.getPoint().getX() >= (boardXBound + (x * ((float)opBoard.getSize().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                            e.getPoint().getX() < (boardXBound + ((x + 1) * ((float)opBoard.getSize().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                            e.getPoint().getY() >= (boardYBound + (y * ((float)opBoard.getSize().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight() &&
+                            e.getPoint().getY() < (boardYBound + ((y + 1) * ((float)opBoard.getSize().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight()) 
                         {
 
                             //get gridcells
@@ -267,10 +267,10 @@ public class GameWindow extends JFrame implements ActionListener {
                                 for (int x = 0; x < Constants.BOARD_DIMENSIONS; x++) {
 
                                     // check if mouse hovered over tile
-                                    if (mousePosition.getX() >= (boardXBound + (x * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
-                                        mousePosition.getX() < (boardXBound + ((x + 1) * ((float)opBoard.size().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
-                                        mousePosition.getY() >= (boardYBound + (y * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight() &&
-                                        mousePosition.getY() < (boardYBound + ((y + 1) * ((float)opBoard.size().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight()) 
+                                    if (mousePosition.getX() >= (boardXBound + (x * ((float)opBoard.getSize().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                                        mousePosition.getX() < (boardXBound + ((x + 1) * ((float)opBoard.getSize().getWidth() / getWidth() / Constants.BOARD_DIMENSIONS))) * getWidth() &&
+                                        mousePosition.getY() >= (boardYBound + (y * ((float)opBoard.getSize().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight() &&
+                                        mousePosition.getY() < (boardYBound + ((y + 1) * ((float)opBoard.getSize().getHeight() / getHeight() / Constants.BOARD_DIMENSIONS))) * getHeight()) 
                                     {
                                         // set border color to blue
                                         opponentBoardButtons[y][x].setBorder(BorderFactory.createLineBorder(Color.blue, SELECTED_BORDER_WIDTH));
