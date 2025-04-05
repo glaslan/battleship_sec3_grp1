@@ -37,8 +37,8 @@ public class GameWindow extends JFrame implements ActionListener {
     private int SELECTED_BORDER_WIDTH = 4;
 
     // button definitions
-    private JButton b_Connect;
-    private JButton b_Exit;
+    private JComponent b_Connect;
+    private JComponent b_Exit;
     private JButton b_Refresh;
     private JButton b_Ready;
 
@@ -132,16 +132,18 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setContentPane(this.background);
 
         /////// Buttons ////////
-        b_Connect = new JButton("Connect");
-        b_Connect.setBorder(BorderFactory.createLineBorder(Color.black, 10));
+        AssetImage connectImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "start_button.png"), 0.5, 0.15, this.getWidth(), this.getHeight());
+        AssetImage exitImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "exit_button.png"), 0.5, 0.15, this.getWidth(), this.getHeight());
+        b_Connect = new JLabel(connectImage);
+        // b_Connect.setBorder(BorderFactory.createLineBorder(Color.black, 10));
         b_Connect.setFont(new Font(Constants.FONT, Font.PLAIN, 60));
-        buttonInit(b_Connect, 0.25, 0.6, 0.5, 0.15);
+        componentInit(b_Connect, 0.25, 0.6, 0.5, 0.15);
         b_Connect.setVisible(true);
-
-        b_Exit = new JButton("Exit");
-        b_Exit.setBorder(BorderFactory.createLineBorder(Color.black, 10));
+        
+        b_Exit = new JLabel(exitImage);
+        // b_Exit.setBorder(BorderFactory.createLineBorder(Color.black, 10));
         b_Exit.setFont(new Font(Constants.FONT, Font.PLAIN, 60));
-        buttonInit(b_Exit, 0.25, 0.8, 0.5, 0.15);
+        componentInit(b_Exit, 0.25, 0.8, 0.5, 0.15);
         b_Exit.setVisible(true);
 
         b_Refresh = new JButton("Refresh");
