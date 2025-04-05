@@ -126,14 +126,10 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.inGame = false;
 
-        ImageIcon back = new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png");
+        ImageIcon back = new ImageIcon(Constants.ASSET_PATH+"home_page.png");
 
         this.setGameBackground(back);
         this.setContentPane(this.background);
-        // this.background = new JLabel();
-        // componentInit(background, 0, 0, 1, 1);
-        // this.background.setVisible(true);
-        // this.setGameBackground(new ImageIcon(Constants.ASSET_PATH+"ThisBeAnAsset.png"));
 
         /////// Buttons ////////
         b_Connect = new JButton("Connect");
