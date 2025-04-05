@@ -180,11 +180,10 @@ public class GameWindow extends JFrame implements ActionListener {
         /////// Labels ////////
         l_title = new JLabel("Battleship", SwingConstants.CENTER);
         componentInit(l_title, 0.1, 0.1, 0.8, 0.2);
-        l_title.setVisible(true);
         l_title.setFont(new Font(Constants.FONT, Font.BOLD, 100));
 
         l_wait = new JLabel("Waiting for Opponent", SwingConstants.CENTER);
-        componentInit(l_wait, 0.1, 0.35, 0.8, 0.3);
+        componentInit(l_wait, 0.1, 0.65, 0.8, 0.3);
         l_wait.setFont(new Font(Constants.FONT, Font.BOLD, 120));
 
         l_turnDisplay = new JLabel("Waiting for Opponent", SwingConstants.CENTER);
@@ -228,7 +227,16 @@ public class GameWindow extends JFrame implements ActionListener {
                                 setTurn(false);
                             }
                             System.out.println(x+", "+y);
-        }}}}}}); // end addMouseListener();
+                    }}}
+                }
+
+                if (clicked(getWindowComponent(b_Connect), e.getPoint())) {
+                    connectToServer();
+                }
+                else if (clicked(getWindowComponent(b_Exit), e.getPoint())) {
+                    System.exit(1);
+                }
+        }}); // end addMouseListener();
 
         Timer onRefresh;
         onRefresh = new Timer((int)(REFRESH_RATE), 
@@ -317,7 +325,6 @@ public class GameWindow extends JFrame implements ActionListener {
                 p.getY() >= getWindowYPosition(element.getBoundY()) &&
                 p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) {
             return true;
-
         }
         return false;
     }
