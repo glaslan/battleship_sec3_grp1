@@ -196,7 +196,7 @@ public final class ConnectionManager implements Runnable {
             var output = new DataOutputStream(client.getOutputStream());
             output.write(packet.getBuffer());
             return true;
-        } catch (IOException ex) {
+        } catch (IOException | NullPointerException ex) {
             FileLogger.logError(ConnectionManager.class, "sendPacket(Packet, Socket)", "Failed to send packet");
             System.err.println("Failed to send packet");
             return false;

@@ -404,6 +404,7 @@ public final class Packet {
             this.mBody = Files.readAllBytes(file.toPath());
         } catch (IOException e) {
             FileLogger.logError(Packet.class, "serialize(String)", "Could not read from file...");
+            System.err.println("Could not read image from file");
             return;
         }
 

@@ -406,8 +406,8 @@ public class GameManager implements Runnable {
         // Send image packets
         Packet packetBackgroundP1 = new Packet();
         Packet packetBackgroundP2 = new Packet();
-        packetBackgroundP1.serialize("p1Background.jpeg");
-        packetBackgroundP2.serialize("p2Background.jpeg");
+        packetBackgroundP1.serialize("p1Background.png");
+        packetBackgroundP2.serialize("p2Background.png");
 
         // Send packets, end game if fail
         ConnectionManager.sendPacket(this.mClient1, packetBackgroundP1);
