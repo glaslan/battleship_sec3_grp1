@@ -18,6 +18,7 @@ public class GameManager implements Runnable {
     // ----- Constants -----
     
     private static final int SLEEP_TIME = ConnectionManager.DEFAULT_TIMEOUT / 2;
+    private static final int DEFAULT_ID = -1;
 
 
 
@@ -25,7 +26,7 @@ public class GameManager implements Runnable {
     
     private final Socket mClient1, mClient2;
     private final Grid mGrid;
-    
+    private int mUserId1, mUserId2;
 
     // For easy swapping
     private Socket mCurrentSocket;
@@ -36,6 +37,9 @@ public class GameManager implements Runnable {
     // Ending games
     private boolean mGameOver;
     private boolean mCurrentPlayerIsOne;
+
+
+
     private static boolean sServerClosed;
     static {
         sServerClosed = false;
@@ -101,35 +105,46 @@ public class GameManager implements Runnable {
             }
 
             // Check packet data
-            if (received.getType() == Packet.PACKET_TYPE_GRID) {
-                Grid grid = received.getGrid();
-                if (this.mGrid.checkDifferences(grid) != 1) {
-                    System.err.println("Too many grid changes received");
-                    this.sendGridsToPlayers();
-                    continue;
-                }
-
-                // Update grid
-                if (this.mCurrentPlayerIsOne) {
-                    this.mGrid.combine(grid, this.mGrid);
-                }
-                else {
-                    grid.translateP1toP2();
-                    this.mGrid.combine(this.mGrid, grid);
-                    this.generateSugarSharks();
-                }
+            Grid grid = received.getGrid();
+            if (this.mGrid.checkDifferences(grid) != 1) {
+                System.err.println("Too many grid changes received");
+                this.sendGridsToPlayers();
+                continue;
             }
 
-            // Do some stuff with sending
-            
+            // Update grid
+            boolean hitShip = false;
+            if (this.mCurrentPlayerIsOne) {
+                int prevHits = this.mGrid.hitCountP1();
+                this.mGrid.combine(grid, this.mGrid);
+                if (prevHits < this.mGrid.hitCountP1()) {
+                    hitShip = true;
+                }
+            }
+            else {
+                grid.translateP1toP2();
+                int prevHits = this.mGrid.hitCountP2();
+                this.mGrid.combine(this.mGrid, grid);
+                if (prevHits < this.mGrid.hitCountP2()) {
+                    hitShip = true;
+                }
+                this.generateSugarSharks();
+            }
+
             // Swap players
             this.swapPlayers();
             gridSent = false;
 
             // Checks if there are ships remaining
             if (this.getShipsRemaining() <= 0) {
+                System.out.println("No ships remaining");
                 this.sendGridsToPlayers();
                 this.mGameOver = true;
+            }
+
+            // Swap back if ship was hit
+            if (hitShip) {
+                this.swapPlayers();
             }
         }
         
@@ -361,7 +376,6 @@ public class GameManager implements Runnable {
                 ConnectionManager.sendPacket(client, packet);
                 packet = null;
                 continue;
-                
             }
             
             // Grid confirmed
