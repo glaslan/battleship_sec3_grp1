@@ -128,6 +128,9 @@ public final class Grid {
             if (this.hasShipP1()) {
                 this.bitManipulate(MASK_SHOT_1, hasShip);
             }
+            else {
+                System.out.println("im being cucked");
+            }
         }
         
         /**
@@ -137,6 +140,9 @@ public final class Grid {
         public void setSunkP2(boolean hasShot) {
             if (this.hasShipP2()) {
                 this.bitManipulate(MASK_SHOT_2, hasShot);
+            }
+            else {
+                System.out.println("im being cucked");
             }
         }
 
@@ -315,7 +321,7 @@ public final class Grid {
     // ----- Data -----
 
     private GridCell[][] mCells;
-    private ArrayList <Ship> p1Ships;
+   // private ArrayList <Ship> p1Ships;
     private ArrayList <Ship> p2Ships;
 
 
@@ -332,7 +338,7 @@ public final class Grid {
                 this.mCells[i][j] = new GridCell();
             }
         }
-        this.p1Ships = new ArrayList<>();
+        //this.p1Ships = new ArrayList<>();
         this.p2Ships = new ArrayList<>();
     }
     
@@ -458,6 +464,7 @@ public final class Grid {
         // }
         // return diff;
     }
+/*
 
     public int checkShipCount(int player) {
         int shipsLeft = 0;
@@ -478,7 +485,8 @@ public final class Grid {
         }
         return shipsLeft;
     }
-    
+     * 
+ */
     /**
      * Removes all sharks from the grid
      */
@@ -498,12 +506,12 @@ public final class Grid {
     /**
      * Randomly generates ships in the grid for player 1
      */
-    public void generateShipsPlayer1() {
+    public ArrayList <Ship> generateShipsPlayer1() {
         // Clear old ships
         this.clearShipsPlayer1();
 
         // Generate new ones
-        this.createAllP1Ships();
+        return this.createAllP1Ships();
     }
 
     /**
@@ -524,7 +532,7 @@ public final class Grid {
         for (int i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
             this.mCells[i % GRID_SIZE][i / GRID_SIZE].setShipP1(false);
         }
-        this.p1Ships.clear();
+        //this.p1Ships.clear();
     }
 
     /**
@@ -541,29 +549,35 @@ public final class Grid {
     // Ship Generation Methods
 
     // creates and places all p1 ships
-    private void createAllP1Ships() {
-        
+    private ArrayList <Ship> createAllP1Ships() {
+        ArrayList <Ship> shipList = new ArrayList<>();
         // no need to check first ship since the board should be empty
         Ship temp = new Ship(5);
-        this.p1Ships.add(temp);
+        //this.p1Ships.add(temp);
         this.placeShipP1(temp);
-
+        shipList.add(new Ship(temp));
+        
         temp = createValidShipP1(4);
         // i dont trust java
-        this.p1Ships.add(new Ship(temp));
+        //this.p1Ships.add(new Ship(temp));
         this.placeShipP1(temp);
-
+        shipList.add(new Ship(temp));
+        
         temp = createValidShipP1(3);
-        this.p1Ships.add(new Ship(temp));
+        //this.p1Ships.add(new Ship(temp));
         this.placeShipP1(temp);
-
+        shipList.add(new Ship(temp));
+        
         temp = createValidShipP1(3);
-        this.p1Ships.add(new Ship(temp));
+        //this.p1Ships.add(new Ship(temp));
         this.placeShipP1(temp);
-
+        shipList.add(new Ship(temp));
+        
         temp = createValidShipP1(2);
-        this.p1Ships.add(new Ship(temp));
+        //this.p1Ships.add(new Ship(temp));
         this.placeShipP1(temp);
+        shipList.add(new Ship(temp));
+        return shipList;
     }
 
     // im making two functions since this one is already huge

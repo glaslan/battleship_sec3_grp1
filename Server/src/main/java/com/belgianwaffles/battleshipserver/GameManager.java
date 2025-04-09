@@ -18,6 +18,7 @@ public class GameManager implements Runnable {
     // ----- Constants -----
     
     private static final int SLEEP_TIME = ConnectionManager.DEFAULT_TIMEOUT / 2;
+    private static final int TOTAL_SHIPS = 5;
     private static final int DEFAULT_ID = -1;
 
 
@@ -45,6 +46,8 @@ public class GameManager implements Runnable {
         sServerClosed = false;
     }
 
+    ArrayList<Ship> p1Ships;
+    ArrayList<Ship> p2Ships;
 
 
     // ----- Methods -----
@@ -64,6 +67,8 @@ public class GameManager implements Runnable {
 
         this.mGrid = new Grid();
         this.mPackets = new ArrayList<>();
+        this.p1Ships = new ArrayList<>();
+        this.p2Ships = new ArrayList<>();
     }
     
     
@@ -113,6 +118,7 @@ public class GameManager implements Runnable {
             }
 
             // Update grid
+            Grid current = new Grid(this.mGrid.getCells());
             boolean hitShip = false;
             if (this.mCurrentPlayerIsOne) {
                 int prevHits = this.mGrid.hitCountP1();
@@ -120,6 +126,7 @@ public class GameManager implements Runnable {
                 if (prevHits < this.mGrid.hitCountP1()) {
                     hitShip = true;
                 }
+                this.setShotOnShip(current);
             }
             else {
                 grid.translateP1toP2();
@@ -128,9 +135,11 @@ public class GameManager implements Runnable {
                 if (prevHits < this.mGrid.hitCountP2()) {
                     hitShip = true;
                 }
+                this.setShotOnShip(current);
                 this.generateSugarSharks();
             }
-
+            this.setSunkShipsP1();
+            this.setSunkShipsP2();
             // Swap players
             this.swapPlayers();
             gridSent = false;
@@ -346,6 +355,9 @@ public class GameManager implements Runnable {
         // Send grids
         ConnectionManager.sendPacket(this.mClient1, p1);
         ConnectionManager.sendPacket(this.mClient2, p2);
+        // TESTING CODE
+        System.out.println("P1 grid:\n" + g1);
+        System.out.println("\n\nP2 grid:\n" + g2);
     }
 
     
@@ -358,6 +370,7 @@ public class GameManager implements Runnable {
      * @param player the player number, either 1 or 2
      */
     private void generatePlayerGrid(Socket client, int player) {
+        
         Packet packet = null;
         while (this.play() && packet == null) {
             // Find the grid packet from client
@@ -370,7 +383,14 @@ public class GameManager implements Runnable {
             if (packet.hasFlag(Packet.PACKET_FLAG_REFRESH)) {
                 // Send another board
                 Grid g = new Grid();
-                g.generateShipsPlayer1();
+                if (player == 1) {
+                    p1Ships.clear();
+                    p1Ships.addAll(g.generateShipsPlayer1());
+                }
+                else {
+                    p2Ships.clear();
+                    p2Ships.addAll(g.generateShipsPlayer1());
+                }
                 packet.serialize(g);
                 ConnectionManager.sendPacket(client, packet);
                 packet = null;
@@ -431,8 +451,10 @@ public class GameManager implements Runnable {
         Packet packetGrid2 = new Packet();
         Grid gridGenerated1 = new Grid();
         Grid gridGenerated2 = new Grid();
-        gridGenerated1.generateShipsPlayer1();
-        gridGenerated2.generateShipsPlayer1();
+        p1Ships.clear();
+        p1Ships.addAll(gridGenerated1.generateShipsPlayer1());
+        p2Ships.clear();
+        p2Ships.addAll(gridGenerated2.generateShipsPlayer1());
         packetGrid1.serialize(gridGenerated1);
         packetGrid2.serialize(gridGenerated2);
 
@@ -470,6 +492,61 @@ public class GameManager implements Runnable {
         }
     }
     
+    private void setShotOnShip(Grid newGrid) {
+        int gridSize = Grid.GRID_SIZE;
+        for (int i = 0; i < gridSize*gridSize; i++) {
+            if ((this.mGrid.getCells()[i/gridSize][i%gridSize].getCell() ^ newGrid.getCells()[i/gridSize][i%gridSize].getCell()) != 0) {
+                for (int j = 0; j < TOTAL_SHIPS; j++) {
+                    if (this.mCurrentPlayerIsOne) {
+                        this.p2Ships.get(j).shoot(i/gridSize, i%gridSize);
+                        System.out.println("shot shipp2");
+                    }
+                    else {
+                        this.p1Ships.get(j).shoot(i/gridSize, i%gridSize);
+                        System.out.println("shot shipp1");
+                    }
+                }
+            }
+        }
+    }
+
+    private void setSunkShipsP1() {
+        for (int j = 0; j < TOTAL_SHIPS; j++) {
+            if (this.p1Ships.get(j).isSunk()) {
+                if (this.p1Ships.get(j).getIsHorizontal()) {
+                    for (int i = this.p1Ships.get(j).getStartX(); i <= this.p1Ships.get(j).getEndX(); i++) {
+                        System.out.println("Sinking x " + i + " y " + this.p1Ships.get(j).getStartY());
+                        this.mGrid.getCells()[i][this.p1Ships.get(j).getStartY()].setSunkP1(true);   
+                    }
+                }
+                else {
+                    for (int i = this.p1Ships.get(j).getStartY(); i <= this.p1Ships.get(j).getEndY(); i++) {
+                        System.out.println("Sinking x " + this.p1Ships.get(j).getStartX() + " y " + i);
+                        this.mGrid.getCells()[this.p1Ships.get(j).getStartX()][i].setSunkP1(true);   
+                    }
+                }
+            }
+        }
+    }
+    
+    private void setSunkShipsP2() {
+        for (int j = 0; j < TOTAL_SHIPS; j++) {
+            if (this.p2Ships.get(j).isSunk()) {
+                if (this.p2Ships.get(j).getIsHorizontal()) {
+                    for (int i = this.p2Ships.get(j).getStartX(); i <= this.p2Ships.get(j).getEndX(); i++) {
+                        this.mGrid.getCells()[i][this.p2Ships.get(j).getStartY()].setSunkP2(true);   
+                    }
+                }
+                else {
+                    for (int i = this.p2Ships.get(j).getStartY(); i <= this.p2Ships.get(j).getEndY(); i++) {
+                        this.mGrid.getCells()[this.p2Ships.get(j).getStartX()][i].setSunkP2(true);   
+                    }
+                }
+            }
+        }
+    }
+
+
     /**
      * After ending the game, closes all necessary data
      */

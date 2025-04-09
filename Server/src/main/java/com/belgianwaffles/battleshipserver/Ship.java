@@ -210,6 +210,7 @@ public class Ship {
             if (!this.mShotSpots[index]) {
                 this.mShotSpots[index] = true;
                 this.mShotCount++;
+                System.out.println("got shot");
             }
             // Already shot here
             else {
@@ -235,7 +236,7 @@ public class Ship {
         if (y <= this.mStart.y || this.mEnd.y < y) {
             return;
         }
-    
+        
         // Ship was shot, but ensure its not same spot
         int index = y - this.mStart.y;
         try {
@@ -243,6 +244,7 @@ public class Ship {
             if (!this.mShotSpots[index]) {
                 this.mShotSpots[index] = true;
                 this.mShotCount++;
+                System.out.println("got shot");
             }
             // Already shot here
             else {
