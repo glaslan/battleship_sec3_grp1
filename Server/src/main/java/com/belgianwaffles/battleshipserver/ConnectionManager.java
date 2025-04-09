@@ -12,7 +12,7 @@ public final class ConnectionManager implements Runnable {
     // ----- Constants -----
 
     public static final int DEFAULT_PORT    = 27000;
-    public static final int DEFAULT_TIMEOUT = 10000;
+    public static final int DEFAULT_TIMEOUT = 20000;
 
 
 
@@ -231,7 +231,7 @@ public final class ConnectionManager implements Runnable {
 
             // Return the packet
             return packet;
-        } catch (IOException e) {
+        } catch (IOException | IndexOutOfBoundsException e) {
             return null;
         }
     }

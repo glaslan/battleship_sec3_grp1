@@ -610,12 +610,63 @@ public class GameManager implements Runnable {
     }
     
     /**
+     * Checks the userId from received packet
+     * @param client client that sent the packet
+     * @param packet the packet
+     * @return
+     */
+    private boolean verifyUserId(Socket client, Packet packet) {
+        // Null packets are allowed
+        if (packet == null) {
+            return true;
+        }
+
+        // Get the ID out of the packet
+        int id = packet.getUser();
+
+        // Client 1 check
+        if (client == this.mClient1) {
+            // Set userId if not set
+            if (this.mUserId1 == DEFAULT_ID) {
+                this.mUserId1 = id;
+                return true;
+            }
+            
+            // Check if set
+            if (this.mUserId1 == id) {
+                return true;
+            }
+        }
+        // Client 2 check
+        else if (client == this.mClient2) {
+            // Set userId if not set
+            if (this.mUserId2 == DEFAULT_ID) {
+                this.mUserId2 = id;
+                return true;
+            }
+            
+            // Check if set
+            if (this.mUserId2 == id) {
+                return true;
+            }
+        }
+        // Not verified
+        else {
+            this.mGameOver = true;
+        }
+        return false;
+    }
+    
+    /**
      * Adds a packet to be checked later
      * @param client the client that received the packet
      * @param packet the received packet
      */
     private synchronized void addPacket(Socket client, Packet packet) {
-        this.mPackets.add(new PacketMap(client, packet));
+        // Verify the packet before adding
+        if (this.verifyUserId(client, packet)) {
+            this.mPackets.add(new PacketMap(client, packet));
+        }
     }
 
     /**
