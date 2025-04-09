@@ -137,7 +137,6 @@ public class GameManager implements Runnable {
 
             // Checks if there are ships remaining
             if (this.getShipsRemaining() <= 0) {
-                System.out.println("No ships remaining");
                 this.sendGridsToPlayers();
                 this.mGameOver = true;
             }
@@ -484,14 +483,14 @@ public class GameManager implements Runnable {
 
         // Determine winner from current player
         if (this.mCurrentPlayerIsOne) {
-            // P1 loss, P2 win
-            ConnectionManager.sendPacket(this.mClient1, lossPacket);
-            ConnectionManager.sendPacket(this.mClient2, winPacket);
-        }
-        else {
             // P1 win, P2 loss
             ConnectionManager.sendPacket(this.mClient1, winPacket);
             ConnectionManager.sendPacket(this.mClient2, lossPacket);
+        }
+        else {
+            // P1 loss, P2 win
+            ConnectionManager.sendPacket(this.mClient1, lossPacket);
+            ConnectionManager.sendPacket(this.mClient2, winPacket);
         }
         
         // Close clients
