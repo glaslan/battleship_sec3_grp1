@@ -615,14 +615,14 @@ public class GameWindow extends JFrame implements ActionListener {
         try {
             return this.getWidth();
         } catch (Exception e) {
-            return 100;
+            return Constants.WINDOW_WIDTH;
         }
     } 
     private int Height() {
         try {
             return this.getHeight();
         } catch (Exception e) {
-            return 100;
+            return Constants.WINDOW_HEIGHT;
         }
     } 
 
