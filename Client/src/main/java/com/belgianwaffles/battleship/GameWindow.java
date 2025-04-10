@@ -62,6 +62,7 @@ public class GameWindow extends JFrame implements ActionListener {
     private AssetImage missImg;
     private AssetImage sugarSharkImg;
     private AssetImage shotImg;
+    private ImageIcon back;
 
     // game variables
     private Grid board;
@@ -126,24 +127,24 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.inGame = false;
 
-        ImageIcon back = new ImageIcon(Constants.ASSET_PATH+"home_page.png");
+        this.back = new ImageIcon(Constants.ASSET_PATH+"home_page.png");
 
         this.setGameBackground(back);
         this.setContentPane(this.background);
 
         /////// Buttons ////////
-        AssetImage connectImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "start_button.png"), 0.5, 0.15, this.getWidth(), this.getHeight());
-        AssetImage exitImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "exit_button.png"), 0.5, 0.15, this.getWidth(), this.getHeight());
+        AssetImage connectImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "start_button.png"), 0.4, 0.15, this.getWidth(), this.getHeight());
+        AssetImage exitImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "exit_button.png"), 0.4, 0.15, this.getWidth(), this.getHeight());
         b_Connect = new JLabel(connectImage);
         // b_Connect.setBorder(BorderFactory.createLineBorder(Color.black, 10));
         b_Connect.setFont(new Font(Constants.FONT, Font.PLAIN, 60));
-        componentInit(b_Connect, 0.25, 0.6, 0.5, 0.15);
+        componentInit(b_Connect, 0.55, 0.5, 0.4, 0.15);
         b_Connect.setVisible(true);
         
         b_Exit = new JLabel(exitImage);
         // b_Exit.setBorder(BorderFactory.createLineBorder(Color.black, 10));
         b_Exit.setFont(new Font(Constants.FONT, Font.PLAIN, 60));
-        componentInit(b_Exit, 0.25, 0.8, 0.5, 0.15);
+        componentInit(b_Exit, 0.55, 0.7, 0.4, 0.15);
         b_Exit.setVisible(true);
 
         b_Refresh = new JButton("Refresh");
@@ -510,6 +511,8 @@ public class GameWindow extends JFrame implements ActionListener {
     public void endGame(boolean winner) {
 
         this.inGame=false;
+        this.opBoard.setVisible(false);
+        this.playerBoard.setVisible(false);
         if (winner) {
             l_turnDisplay.setText("You Win!");
         }
@@ -523,16 +526,16 @@ public class GameWindow extends JFrame implements ActionListener {
         Timer onRefresh;
         onRefresh = new Timer((int)(3000), 
                 
-                // calls every time timer refreshes (once per refreshRate/1000)
-                new ActionListener() {
-                    
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
+            // calls every time timer refreshes (once per refreshRate/1000)
+            new ActionListener() {
+                
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-                        clearScreen();
-                        l_title.setVisible(true);
-                        b_Connect.setVisible(true);
-                        b_Exit.setVisible(true);
+                    clearScreen();
+                    setGameBackground(GameWindow.this.back);
+                    b_Connect.setVisible(true);
+                    b_Exit.setVisible(true);
 
         }}); // end timer();
 
