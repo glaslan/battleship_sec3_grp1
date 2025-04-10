@@ -144,7 +144,7 @@ public class GameManager implements Runnable {
             if (hitShip) {
                 this.swapPlayers();
             }
-            else if (!this.mCurrentPlayerIsOne) {
+            else if (this.mCurrentPlayerIsOne) {
                 this.generateSugarSharks();
             }
         }
