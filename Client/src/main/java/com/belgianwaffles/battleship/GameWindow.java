@@ -7,6 +7,7 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Canvas;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -84,7 +85,6 @@ public class GameWindow extends JFrame implements ActionListener {
     private float boardYBound = 0.1f;
     private float firstBoardPosition = 0.05f;
     private float secondBoardPosition = 0.55f;
-    private float offsetY = 0.05f;
 
 
     // for removing clutter in the constructor
@@ -123,18 +123,19 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setLayout(null);
         this.setUndecorated(true);
         this.setVisible(true);
+        this.setMinimumSize(new Dimension(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT));
         this.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.inGame = false;
 
-        this.back = new ImageIcon(Constants.ASSET_PATH+"home_page.png");
+        ImageIcon back = new ImageIcon(Constants.ASSET_PATH+"home_page.png");
 
         this.setGameBackground(back);
         this.setContentPane(this.background);
 
         /////// Buttons ////////
-        AssetImage connectImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "start_button.png"), 0.4, 0.15, this.getWidth(), this.getHeight());
-        AssetImage exitImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "exit_button.png"), 0.4, 0.15, this.getWidth(), this.getHeight());
+        AssetImage connectImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "start_button.png"), 0.4, 0.15, this.Width(), this.Height());
+        AssetImage exitImage = new AssetImage(new ImageIcon(Constants.ASSET_PATH + "exit_button.png"), 0.4, 0.15, this.Width(), this.Height());
         b_Connect = new JLabel(connectImage);
         // b_Connect.setBorder(BorderFactory.createLineBorder(Color.black, 10));
         b_Connect.setFont(new Font(Constants.FONT, Font.PLAIN, 60));
@@ -609,6 +610,21 @@ public class GameWindow extends JFrame implements ActionListener {
 
         revalidate();
     }
+
+    private int Width() {
+        try {
+            return this.getWidth();
+        } catch (Exception e) {
+            return 100;
+        }
+    } 
+    private int Height() {
+        try {
+            return this.getHeight();
+        } catch (Exception e) {
+            return 100;
+        }
+    } 
 
     // resets all the boarders of boards to there default
     public void resetBorders() {
