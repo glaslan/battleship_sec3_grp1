@@ -128,13 +128,12 @@ public class GameManager implements Runnable {
                 if (prevHits < this.mGrid.hitCountP2()) {
                     hitShip = true;
                 }
-                this.generateSugarSharks();
             }
-
+            
             // Swap players
             this.swapPlayers();
             gridSent = false;
-
+            
             // Checks if there are ships remaining
             if (this.getShipsRemaining() <= 0) {
                 this.sendGridsToPlayers();
@@ -144,6 +143,9 @@ public class GameManager implements Runnable {
             // Swap back if ship was hit
             if (hitShip) {
                 this.swapPlayers();
+            }
+            else if (!this.mCurrentPlayerIsOne) {
+                this.generateSugarSharks();
             }
         }
         
