@@ -1,3 +1,3 @@
 cd ./Server
-mvn package clean
+mvn clean package
 java -cp ./target/* com.belgianwaffles.battleshipserver.Main
