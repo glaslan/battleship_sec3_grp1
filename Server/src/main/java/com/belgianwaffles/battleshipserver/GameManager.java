@@ -18,6 +18,7 @@ public class GameManager implements Runnable {
     // ----- Constants -----
     
     private static final int SLEEP_TIME = ConnectionManager.DEFAULT_TIMEOUT / 2;
+    private static final int DEFAULT_ID = -1;
 
 
 
@@ -25,7 +26,7 @@ public class GameManager implements Runnable {
     
     private final Socket mClient1, mClient2;
     private final Grid mGrid;
-    
+    private int mUserId1, mUserId2;
 
     // For easy swapping
     private Socket mCurrentSocket;
@@ -36,6 +37,9 @@ public class GameManager implements Runnable {
     // Ending games
     private boolean mGameOver;
     private boolean mCurrentPlayerIsOne;
+
+
+
     private static boolean sServerClosed;
     static {
         sServerClosed = false;
@@ -101,27 +105,32 @@ public class GameManager implements Runnable {
             }
 
             // Check packet data
-            if (received.getType() == Packet.PACKET_TYPE_GRID) {
-                Grid grid = received.getGrid();
-                if (this.mGrid.checkDifferences(grid) != 1) {
-                    System.err.println("Too many grid changes received");
-                    this.sendGridsToPlayers();
-                    continue;
-                }
-
-                // Update grid
-                if (this.mCurrentPlayerIsOne) {
-                    this.mGrid.combine(grid, this.mGrid);
-                }
-                else {
-                    grid.translateP1toP2();
-                    this.mGrid.combine(this.mGrid, grid);
-                    this.generateSugarSharks();
-                }
+            Grid grid = received.getGrid();
+            if (this.mGrid.checkDifferences(grid) != 1) {
+                System.err.println("Too many grid changes received");
+                this.sendGridsToPlayers();
+                continue;
             }
 
-            // Do some stuff with sending
-            
+            // Update grid
+            boolean hitShip = false;
+            if (this.mCurrentPlayerIsOne) {
+                int prevHits = this.mGrid.hitCountP1();
+                this.mGrid.combine(grid, this.mGrid);
+                if (prevHits < this.mGrid.hitCountP1()) {
+                    hitShip = true;
+                }
+            }
+            else {
+                grid.translateP1toP2();
+                int prevHits = this.mGrid.hitCountP2();
+                this.mGrid.combine(this.mGrid, grid);
+                if (prevHits < this.mGrid.hitCountP2()) {
+                    hitShip = true;
+                }
+                this.generateSugarSharks();
+            }
+
             // Swap players
             this.swapPlayers();
             gridSent = false;
@@ -130,6 +139,11 @@ public class GameManager implements Runnable {
             if (this.getShipsRemaining() <= 0) {
                 this.sendGridsToPlayers();
                 this.mGameOver = true;
+            }
+
+            // Swap back if ship was hit
+            if (hitShip) {
+                this.swapPlayers();
             }
         }
         
@@ -361,7 +375,6 @@ public class GameManager implements Runnable {
                 ConnectionManager.sendPacket(client, packet);
                 packet = null;
                 continue;
-                
             }
             
             // Grid confirmed
@@ -406,8 +419,8 @@ public class GameManager implements Runnable {
         // Send image packets
         Packet packetBackgroundP1 = new Packet();
         Packet packetBackgroundP2 = new Packet();
-        packetBackgroundP1.serialize("p1Background.jpeg");
-        packetBackgroundP2.serialize("p2Background.jpeg");
+        packetBackgroundP1.serialize("p1Background.png");
+        packetBackgroundP2.serialize("p2Background.png");
 
         // Send packets, end game if fail
         ConnectionManager.sendPacket(this.mClient1, packetBackgroundP1);
@@ -470,14 +483,14 @@ public class GameManager implements Runnable {
 
         // Determine winner from current player
         if (this.mCurrentPlayerIsOne) {
-            // P1 loss, P2 win
-            ConnectionManager.sendPacket(this.mClient1, lossPacket);
-            ConnectionManager.sendPacket(this.mClient2, winPacket);
-        }
-        else {
             // P1 win, P2 loss
             ConnectionManager.sendPacket(this.mClient1, winPacket);
             ConnectionManager.sendPacket(this.mClient2, lossPacket);
+        }
+        else {
+            // P1 loss, P2 win
+            ConnectionManager.sendPacket(this.mClient1, lossPacket);
+            ConnectionManager.sendPacket(this.mClient2, winPacket);
         }
         
         // Close clients
@@ -610,12 +623,63 @@ public class GameManager implements Runnable {
     }
     
     /**
+     * Checks the userId from received packet
+     * @param client client that sent the packet
+     * @param packet the packet
+     * @return
+     */
+    private boolean verifyUserId(Socket client, Packet packet) {
+        // Null packets are allowed
+        if (packet == null) {
+            return true;
+        }
+
+        // Get the ID out of the packet
+        int id = packet.getUser();
+
+        // Client 1 check
+        if (client == this.mClient1) {
+            // Set userId if not set
+            if (this.mUserId1 == DEFAULT_ID) {
+                this.mUserId1 = id;
+                return true;
+            }
+            
+            // Check if set
+            if (this.mUserId1 == id) {
+                return true;
+            }
+        }
+        // Client 2 check
+        else if (client == this.mClient2) {
+            // Set userId if not set
+            if (this.mUserId2 == DEFAULT_ID) {
+                this.mUserId2 = id;
+                return true;
+            }
+            
+            // Check if set
+            if (this.mUserId2 == id) {
+                return true;
+            }
+        }
+        // Not verified
+        else {
+            this.mGameOver = true;
+        }
+        return false;
+    }
+    
+    /**
      * Adds a packet to be checked later
      * @param client the client that received the packet
      * @param packet the received packet
      */
     private synchronized void addPacket(Socket client, Packet packet) {
-        this.mPackets.add(new PacketMap(client, packet));
+        // Verify the packet before adding
+        if (this.verifyUserId(client, packet)) {
+            this.mPackets.add(new PacketMap(client, packet));
+        }
     }
 
     /**

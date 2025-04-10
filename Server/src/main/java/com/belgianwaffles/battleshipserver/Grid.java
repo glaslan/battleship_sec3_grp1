@@ -782,6 +782,30 @@ public final class Grid {
     
     // ----- Extras -----
 
+    int hitCountP1() {
+        int hits = 0;
+        for (int y = 0; y < GRID_SIZE; y++) {
+            for (int x = 0; x < GRID_SIZE; x++) {
+                if (this.mCells[x][y].hasShotP1() && this.mCells[x][y].hasShipP2()) {
+                    hits++;
+                }
+            }
+        }
+        return hits;
+    }
+
+    int hitCountP2() {
+        int hits = 0;
+        for (int y = 0; y < GRID_SIZE; y++) {
+            for (int x = 0; x < GRID_SIZE; x++) {
+                if (this.mCells[x][y].hasShotP2() && this.mCells[x][y].hasShipP1()) {
+                    hits++;
+                }
+            }
+        }
+        return hits;
+    }
+
     /**
      * Gives a formatted grid string
      * @return A formatted, printable string

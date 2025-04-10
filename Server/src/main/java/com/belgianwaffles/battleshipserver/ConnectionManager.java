@@ -12,7 +12,7 @@ public final class ConnectionManager implements Runnable {
     // ----- Constants -----
 
     public static final int DEFAULT_PORT    = 27000;
-    public static final int DEFAULT_TIMEOUT = 10000;
+    public static final int DEFAULT_TIMEOUT = 20000;
 
 
 
@@ -196,7 +196,7 @@ public final class ConnectionManager implements Runnable {
             var output = new DataOutputStream(client.getOutputStream());
             output.write(packet.getBuffer());
             return true;
-        } catch (IOException ex) {
+        } catch (IOException | NullPointerException ex) {
             FileLogger.logError(ConnectionManager.class, "sendPacket(Packet, Socket)", "Failed to send packet");
             System.err.println("Failed to send packet");
             return false;
@@ -231,7 +231,7 @@ public final class ConnectionManager implements Runnable {
 
             // Return the packet
             return packet;
-        } catch (IOException e) {
+        } catch (IOException | IndexOutOfBoundsException e) {
             return null;
         }
     }

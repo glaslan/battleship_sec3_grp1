@@ -404,6 +404,7 @@ public final class Packet {
             this.mBody = Files.readAllBytes(file.toPath());
         } catch (IOException e) {
             FileLogger.logError(Packet.class, "serialize(String)", "Could not read from file...");
+            System.err.println("Could not read image from file");
             return;
         }
 
@@ -508,8 +509,12 @@ public final class Packet {
     /**
      * Gets the databuffer, should make a call to serialize before to pack specific data
      * @return serialized data buffer, null if never serialized
+     * @throws NullPointerException if the buffer is null
      */
     public byte[] getBuffer() {
+        if (this.mData == null) {
+            throw new NullPointerException();
+        }
         return this.mData;
     }
 

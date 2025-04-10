@@ -320,7 +320,8 @@ public class GameWindow extends JFrame implements ActionListener {
     private boolean clicked(WindowComponent element, Point p) {
 
         // check if within labels area
-        if (p.getX() >= getWindowXPosition(element.getBoundX()) &&
+        if (element.getComponent().isVisible() &&
+                p.getX() >= getWindowXPosition(element.getBoundX()) &&
                 p.getX() <= getWindowXPosition(element.getBoundX() + element.getWidth()) &&
                 p.getY() >= getWindowYPosition(element.getBoundY()) &&
                 p.getY() <= getWindowYPosition(element.getBoundY() + element.getHeight())) {
@@ -433,6 +434,10 @@ public class GameWindow extends JFrame implements ActionListener {
                 if (cells[i][j].hasSharkP1()) {
                     // sugar shark
                     opponentBoardButtons[i][j].setIcon(sugarSharkImg);
+                }
+                else if (cells[i][j].hasShipP2() && cells[i][j].hasSunkP2() && cells[i][j].hasShotP1()) {
+                    // sunk shit
+                    opponentBoardButtons[i][j].setIcon(shipShotImg);
                 }
                 else if (cells[i][j].hasShipP2() && cells[i][j].hasShotP1()) {
                     // landed shot
