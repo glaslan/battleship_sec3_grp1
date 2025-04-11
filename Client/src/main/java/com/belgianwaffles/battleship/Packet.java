@@ -35,7 +35,7 @@ public final class Packet {
         // Contains all header data after packing
         private final byte[] mData;
         
-        
+        private byte authID;
         
         // ----- Methods -----
         
@@ -43,6 +43,7 @@ public final class Packet {
          * Creates a blank header
          */
         public Header() {
+            this.authID = (byte)(Math.random() * Byte.MAX_VALUE);
             this.mData = new byte[HEADER_SIZE];
             this.addType(PACKET_TYPE_NONE);
         }
@@ -105,7 +106,7 @@ public final class Packet {
          * @param user userId
          */
         public void addUser(short user) {
-            this.bitManipulate(HEAD_INDEX_USER, HEAD_MASK_USER, (byte)((user & 0xff00) >> 8));
+            this.bitManipulate(HEAD_INDEX_USER, HEAD_MASK_USER, (byte)((user & authID) >> 8));
             this.bitManipulate(HEAD_INDEX_USER + 1, HEAD_MASK_USER, (byte)(user & 0x00ff));
         }
         
