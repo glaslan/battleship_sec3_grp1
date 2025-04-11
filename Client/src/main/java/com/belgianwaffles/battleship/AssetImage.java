@@ -14,11 +14,20 @@ public class AssetImage extends ImageIcon {
         this.width = width;
         this.height = height;
 
-        this.setImage(img.getImage().getScaledInstance((int)(this.width * screen_width), (int)(this.height * screen_height), java.awt.Image.SCALE_SMOOTH));
+        try {
+            this.setImage(img.getImage().getScaledInstance((int)(this.width * screen_width), (int)(this.height * screen_height), java.awt.Image.SCALE_SMOOTH));
+        } catch (Exception e) {
+            this.setImage(img.getImage());
+        }
+        
     }
 
     public void resizeImage(double screen_width, double screen_height) {
-        this.setImage(img.getImage().getScaledInstance((int)(this.width * screen_width), (int)(this.height * screen_height), java.awt.Image.SCALE_SMOOTH));
+        try {
+            this.setImage(img.getImage().getScaledInstance((int)(this.width * screen_width), (int)(this.height * screen_height), java.awt.Image.SCALE_SMOOTH));
+        } catch (Exception e) {
+            this.setImage(img.getImage());
+        }
     }
 
 
