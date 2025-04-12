@@ -128,7 +128,7 @@ public class GameWindow extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.inGame = false;
 
-        ImageIcon back = new ImageIcon(Constants.ASSET_PATH+"home_page.png");
+        back = new ImageIcon(Constants.ASSET_PATH+"home_page.png");
 
         this.setGameBackground(back);
         this.setContentPane(this.background);
